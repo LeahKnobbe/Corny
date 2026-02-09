@@ -8,23 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<FarmDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("CornyConnectionString")));
 
 builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("CornyConnectionString")));
-
-builder.Services.AddDbContext<ProductDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("CornyConnectionString")));
-
-builder.Services.AddScoped<IFarmRepository, FarmRepository>();
-builder.Services.AddScoped<IFarmService, FarmService>();
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();
+
 
 var app = builder.Build();
 
@@ -48,3 +41,4 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
