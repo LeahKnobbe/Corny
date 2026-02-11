@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "Fruit (Coded)";
+
+    var fruits = new[]
+    {
+        new { Name = "Kiwis", Price = 3.99m, ImageUrl = "https://via.placeholder.com/240x180?text=Kiwis" },
+        new { Name = "Gala Apples", Price = 1.99m, ImageUrl = "https://via.placeholder.com/240x180?text=Gala+Apples" },
+        new { Name = "Seedless Watermelon", Price = 6.99m, ImageUrl = "https://via.placeholder.com/240x180?text=Watermelon" },
+        new { Name = "Macho Plantain", Price = 1.79m, ImageUrl = "https://via.placeholder.com/240x180?text=Plantain" },
+        new { Name = "Envy Apples", Price = 2.99m, ImageUrl = "https://via.placeholder.com/240x180?text=Envy+Apples" },
+        new { Name = "Mandarin Oranges", Price = 3.99m, ImageUrl = "https://via.placeholder.com/240x180?text=Mandarins" }
+    };
+}
+
+<section class="fruit-page">
+    <nav class="fruit-breadcrumb">
+        Home &gt; Produce &gt; Fruit (Coded)
+    </nav>
+
+    <h1 class="fruit-title">Fruit (Coded)</h1>
+
+    <div class="fruit-grid">
+        @foreach (var fruit in fruits)
+        {
+            <article class="fruit-card">
+                <img class="fruit-card__image" src="@fruit.ImageUrl" alt="@fruit.Name" />
+                <div class="fruit-card__body">
+                    <h2 class="fruit-card__name">@fruit.Name</h2>
+                    <div class="fruit-card__price">$@fruit.Price.ToString("0.00")</div>
+                    <div class="fruit-card__rating">★★★★★</div>
+                    <button class="fruit-card__button" type="button">Add to Cart</button>
+                </div>
+            </article>
+        }
+    </div>
+</section>
