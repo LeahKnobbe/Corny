@@ -1,10 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CORNY.Models.ViewModels;
+using BuissnessLogicLayer;
+using DataAccessLayer.Entities;
 
 namespace CORNY.Controllers
 {
     public class AccountController : Controller
     {
+        private readonly IUserService _userService;
+
+        public AccountController(IUserService userService)
+        {
+            _userService = userService;
+        }
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -33,7 +42,7 @@ namespace CORNY.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (model.AcceptTerms != true)
             {
@@ -44,9 +53,36 @@ namespace CORNY.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            return RedirectToAction("Login");
+            // Check if email already exists
+            if (await _userService.EmailExistsAsync(model.Email))
+            {
+                ModelState.AddModelError(nameof(model.Email), 
+                    "An account with this email already exists.");
+                return View(model);
+            }
+
+            // Create new user entity
+            var newUser = new UserModel
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                Password = model.Password, // Will be hashed in service layer
+                Bday = DateOnly.FromDateTime(model.Birthday!.Value)
+            };
+
+            try
+            {
+                await _userService.CreateUserAsync(newUser);
+                TempData["SuccessMessage"] = "Registration successful! Please log in.";
+                return RedirectToAction("Login");
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, 
+                    "An error occurred during registration. Please try again.");
+                return View(model);
+            }
         }
-
-
     }
 }

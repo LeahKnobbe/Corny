@@ -1,0 +1,39 @@
+﻿@using System
+@using System.Linq
+@model IEnumerable<DataAccessLayer.Entities.ProductModel>
+
+@{
+    ViewData["Title"] = "Fruit";
+}
+
+<section class="fruit-page">
+    <nav class="fruit-breadcrumb">
+        Home &gt; Produce &gt; Fruit
+    </nav>
+
+    <h1 class="fruit-title">Fruit</h1>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No fruit products are available yet.</p>
+    }
+    else
+    {
+        <div class="fruit-grid">
+            @foreach (var fruit in Model)
+            {
+                <article class="fruit-card">
+                    <img class="fruit-card__image"
+                         src="https://via.placeholder.com/240x180?text=@Uri.EscapeDataString(fruit.Name)"
+                         alt="@fruit.Name" />
+                    <div class="fruit-card__body">
+                        <h2 class="fruit-card__name">@fruit.Name</h2>
+                        <div class="fruit-card__price">$@fruit.Pricing.ToString("0.00")</div>
+                        <div class="fruit-card__rating">★★★★★</div>
+                        <button class="fruit-card__button" type="button">Add to Cart</button>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

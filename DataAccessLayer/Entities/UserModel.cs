@@ -15,22 +15,18 @@ namespace DataAccessLayer.Entities
         public int UserId { get; set; }
 
         //name
-        public string FirstName { get; set; }
+        public required string FirstName { get; set; }
 
-        public string LastName { get; set; }
+        public required string LastName { get; set; }
 
         //email
-        public string Email { get; set; }
+        public required string Email { get; set; }
 
         //pasword
-        public string Password { get; set; }  
+        public required string Password { get; set; }  
 
         //bday
 
         public DateOnly Bday { get; set; }
-
-
-
-
     }
 }

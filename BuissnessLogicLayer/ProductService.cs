@@ -1,24 +1,21 @@
-﻿using DataAccessLayer.Entities;
-using DataAccessLayer.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DataAccessLayer.Data;
+using DataAccessLayer.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace BuissnessLogicLayer
 {
     public class ProductService : IProductService
     {
-        private readonly IProductRepository productRepository;
-        public ProductService(IProductRepository productRepository)
+        private readonly ProductDbContext productDbContext;
+
+        public ProductService(ProductDbContext productDbContext)
         {
-            this.productRepository = productRepository;
+            this.productDbContext = productDbContext;
         }
 
         public async Task<IEnumerable<ProductModel>> GetProductsAsync()
         {
-            return await productRepository.GetProductsAsync();
+            return await productDbContext.Products.ToListAsync();
         }
     }
 }
