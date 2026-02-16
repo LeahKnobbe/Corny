@@ -2,6 +2,9 @@
 using CORNY.Models.ViewModels;
 using BuissnessLogicLayer;
 using DataAccessLayer.Entities;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 namespace CORNY.Controllers
 {
@@ -22,15 +25,42 @@ namespace CORNY.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            // TODO (Leah later): SignIn logic with Identity
-            // For now: just pretend login succeeded
+            var user = await _userService.AuthenticateAsync(model.Email, model.Password);
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid email or password.");
+                return View(model);
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal);
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
 
@@ -53,21 +83,19 @@ namespace CORNY.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Check if email already exists
             if (await _userService.EmailExistsAsync(model.Email))
             {
-                ModelState.AddModelError(nameof(model.Email), 
+                ModelState.AddModelError(nameof(model.Email),
                     "An account with this email already exists.");
                 return View(model);
             }
 
-            // Create new user entity
             var newUser = new UserModel
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 Email = model.Email,
-                Password = model.Password, // Will be hashed in service layer
+                Password = model.Password, // hashed in service layer
                 Bday = DateOnly.FromDateTime(model.Birthday!.Value)
             };
 
@@ -79,7 +107,7 @@ namespace CORNY.Controllers
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, 
+                ModelState.AddModelError(string.Empty,
                     "An error occurred during registration. Please try again.");
                 return View(model);
             }

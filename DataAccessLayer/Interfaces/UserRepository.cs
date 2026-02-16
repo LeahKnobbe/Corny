@@ -1,11 +1,6 @@
 ﻿using DataAccessLayer.Data;
 using DataAccessLayer.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccessLayer.Interfaces
 {
@@ -33,6 +28,11 @@ namespace DataAccessLayer.Interfaces
         public async Task<bool> EmailExistsAsync(string email)
         {
             return await userDbContext.Users.AnyAsync(u => u.Email == email);
+        }
+
+        public async Task<UserModel?> GetByEmailAsync(string email)
+        {
+            return await userDbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
     }
 }

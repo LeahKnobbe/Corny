@@ -44,6 +44,28 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Farm" asp-action="Index">Farm Index</a>
                         </li>
                     </ul>
+
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            @if (User?.Identity?.IsAuthenticated ?? false)
+                            {
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="navbar-user">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="navbar-user__button" title="Log out">
+                                        <img src="~/images/User_Icon.png" alt="User" />
+                                        <span class="navbar-user__text">Logout</span>
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a class="navbar-user" asp-controller="Account" asp-action="Login" title="Log in">
+                                    <img src="~/images/User_Icon.png" alt="User" />
+                                    <span class="navbar-user__text">Login</span>
+                                </a>
+                            }
+                        </li>
+                    </ul>
                 </div>
             </div>
         </nav>
