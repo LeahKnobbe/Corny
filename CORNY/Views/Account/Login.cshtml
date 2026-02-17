@@ -2,33 +2,61 @@
 
 @{
     ViewData["Title"] = "Login";
+    Layout = null;
 }
 
-<h1>Login</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Corny</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="login-page">
+    <header class="auth-nav auth-nav--light">
+        <a class="auth-nav__brand" asp-controller="Home" asp-action="Index">Corny</a>
+    </header>
 
-<form asp-action="Login" method="post">
-    @Html.AntiForgeryToken()
+    <div class="login-hero">
+        <div class="login-card">
+            <h1 class="login-title">Log In</h1>
 
-    <div>
-        <label asp-for="Email"></label>
-        <input asp-for="Email" />
-        <span asp-validation-for="Email"></span>
+            <form asp-action="Login" method="post" class="login-form">
+                @Html.AntiForgeryToken()
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <div class="login-field">
+                    <label asp-for="Email">Email address</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="login-field">
+                    <label asp-for="Password">Password</label>
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="login-remember">
+                    <input asp-for="RememberMe" class="form-check-input" id="rememberMe" />
+                    <label for="rememberMe" class="form-check-label">Remember Me</label>
+                </div>
+
+                <button type="submit" class="login-button">Log in</button>
+            </form>
+
+            <div class="login-links">
+                <a asp-action="Register">Don’t have an account? Sign up</a>
+                <a href="#">Admin Log In</a>
+            </div>
+        </div>
     </div>
 
-    <div>
-        <label asp-for="Password"></label>
-        <input asp-for="Password" />
-        <span asp-validation-for="Password"></span>
-    </div>
-
-    <div>
-        <input asp-for="RememberMe" />
-        <label asp-for="RememberMe"></label>
-    </div>
-
-    <button type="submit">Log In</button>
-</form>
-
-<div>
-    <a asp-action="Register">Need an account? Register</a>
-</div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

@@ -10,20 +10,17 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="corny-navbar">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CORNY</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                <a class="corny-brand" asp-area="" asp-controller="Home" asp-action="Index">Corny</a>
+
+                <div class="corny-nav">
+                    <ul class="corny-nav-links">
+                        <li>
+                            <a class="corny-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="produceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <li class="dropdown">
+                            <a class="corny-link dropdown-toggle" href="#" id="produceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Produce
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="produceDropdown">
@@ -31,41 +28,42 @@
                                 <li><a class="dropdown-item" href="/Produce/FruitCoded">Fruit (Coded)</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="Index">User index</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Product" asp-action="Index">Product Index</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Farm" asp-action="Index">Farm Index</a>
-                        </li>
+                        <li><a class="corny-link" href="#">Meat</a></li>
+                        <li><a class="corny-link" href="#">Animal Product</a></li>
                     </ul>
 
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            @if (User?.Identity?.IsAuthenticated ?? false)
-                            {
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="navbar-user">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="navbar-user__button" title="Log out">
-                                        <img src="~/images/User_Icon.png" alt="User" />
-                                        <span class="navbar-user__text">Logout</span>
-                                    </button>
-                                </form>
-                            }
-                            else
-                            {
-                                <a class="navbar-user" asp-controller="Account" asp-action="Login" title="Log in">
-                                    <img src="~/images/User_Icon.png" alt="User" />
-                                    <span class="navbar-user__text">Login</span>
-                                </a>
-                            }
-                        </li>
-                    </ul>
+                    <div class="corny-actions">
+                        <div class="corny-search">
+                            <span class="corny-search__icon">🔍</span>
+                            <input type="search" placeholder="Search" aria-label="Search" />
+                        </div>
+
+                        <div class="dropdown corny-user-dropdown">
+                            <button class="corny-icon-button dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="~/images/User_Icon.png" alt="User menu" />
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                                @if (User?.Identity?.IsAuthenticated ?? false)
+                                {
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="corny-dropdown-form">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item">Logout</button>
+                                        </form>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Register">Sign up</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">Login</a></li>
+                                }
+                            </ul>
+                        </div>
+
+                        <a class="corny-icon-button" href="#" title="Cart">
+                            <img src="~/images/CartWhiteButton.png" alt="Cart" />
+                        </a>
+                    </div>
                 </div>
             </div>
         </nav>
