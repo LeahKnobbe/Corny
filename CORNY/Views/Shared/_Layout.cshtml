@@ -10,7 +10,7 @@
 </head>
 <body>
     <header>
-        <nav class="corny-navbar">
+        <nav class="@(ViewData["NavbarClass"] ?? "corny-navbar")">
             <div class="container-fluid">
                 <a class="corny-brand" asp-area="" asp-controller="Home" asp-action="Index">Corny</a>
 
@@ -68,7 +68,7 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="@(ViewData["MainClass"] ?? "container")">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>

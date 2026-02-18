@@ -1,8 +1,52 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
+    ViewData["MainClass"] = "container-fluid p-0";
+    ViewData["NavbarClass"] = "corny-navbar corny-navbar--transparent";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="home-hero">
+    <div class="home-hero__overlay">
+        <h1 class="home-hero__title">Gathered with care,<br />delivered fresh</h1>
+        <a class="home-hero__button" href="/Produce/FruitCoded">Shop Fresh</a>
+    </div>
+</section>
+
+<section class="home-top">
+    <div class="home-top__header">
+        <h2 class="home-top__title">Top Sellers</h2>
+    </div>
+
+    <div class="home-top__grid">
+        <article class="home-card">
+            <img class="home-card__image" src="~/images/Honey.png" alt="Raw Wildflower Honey" />
+            <h3 class="home-card__name">Raw Wildflower Honey</h3>
+            <p class="home-card__price">$11.99</p>
+            <div class="home-card__rating">★★★★★</div>
+            <button class="home-card__button">Add to Cart</button>
+        </article>
+
+        <article class="home-card">
+            <img class="home-card__image" src="~/images/Apples.png" alt="Gala Apples" />
+            <h3 class="home-card__name">Gala Apples</h3>
+            <p class="home-card__price">$1.99</p>
+            <div class="home-card__rating">★★★★★</div>
+            <button class="home-card__button">Add to Cart</button>
+        </article>
+
+        <article class="home-card">
+            <img class="home-card__image" src="~/images/Watermelon.png" alt="Seedless Watermelon" />
+            <h3 class="home-card__name">Seedless Watermelon</h3>
+            <p class="home-card__price">$6.99</p>
+            <div class="home-card__rating">★★★★★</div>
+            <button class="home-card__button">Add to Cart</button>
+        </article>
+
+        <article class="home-card">
+            <img class="home-card__image" src="~/images/Chicken.png" alt="Chicken Meat" />
+            <h3 class="home-card__name">Chicken Meat</h3>
+            <p class="home-card__price">$16.99</p>
+            <div class="home-card__rating">★★★★★</div>
+            <button class="home-card__button">Add to Cart</button>
+        </article>
+    </div>
+</section>
