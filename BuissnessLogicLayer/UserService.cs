@@ -49,5 +49,27 @@ namespace BuissnessLogicLayer
                 return Convert.ToBase64String(hashedBytes);
             }
         }
+
+        public async Task<UserModel?> GetUserByIdAsync(int id)
+        {
+            return await userRepository.GetUserByIdAsync(id);
+        }
+
+        public async Task<bool> UpdateUserAsync(UserModel user)
+        {
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                user.Password = HashPassword(user.Password);
+            }
+            return await userRepository.UpdateUserAsync(user);
+        }
+
+
+        public async Task<bool> DeleteUserAsync(int id)
+        {
+            return await userRepository.DeleteUserAsync(id);
+        }
+
+      
     }
 }

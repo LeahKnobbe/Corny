@@ -1,14 +1,19 @@
-﻿using DataAccessLayer.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using DataAccessLayer.Data;
 using DataAccessLayer.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace BuissnessLogicLayer
+namespace DataAccessLayer.Interfaces
 {
-    public class ProductService : IProductService
+    public class ProductRepository : IProductRepository
     {
         private readonly ProductDbContext productDbContext;
 
-        public ProductService(ProductDbContext productDbContext)
+        public ProductRepository(ProductDbContext productDbContext)
         {
             this.productDbContext = productDbContext;
         }
@@ -23,12 +28,12 @@ namespace BuissnessLogicLayer
             productDbContext.Products.Add(product);
             await productDbContext.SaveChangesAsync();
             return product;
-        }   
+        }
 
         public async Task<ProductModel?> GetProductByIdAsync(int id)
         {
             return await productDbContext.Products.FindAsync(id);
-        }
+        }       
 
         public async Task<bool> UpdateProductAsync(ProductModel product)
         {
@@ -37,16 +42,9 @@ namespace BuissnessLogicLayer
             {
                 return false;
             }
-
             existingProduct.Name = product.Name;
             existingProduct.Description = product.Description;
-            existingProduct.Sizing = product.Sizing;
-            existingProduct.InventoryQuantity = product.InventoryQuantity;
-            existingProduct.IsForSale = product.IsForSale;
             existingProduct.Pricing = product.Pricing;
-            existingProduct.FarmId = product.FarmId;
-            existingProduct.CategoryId = product.CategoryId;
-
             await productDbContext.SaveChangesAsync();
             return true;
         }
@@ -62,5 +60,6 @@ namespace BuissnessLogicLayer
             await productDbContext.SaveChangesAsync();
             return true;
         }
+
     }
 }

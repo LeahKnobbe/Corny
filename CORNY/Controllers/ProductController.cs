@@ -1,4 +1,5 @@
 ﻿using BuissnessLogicLayer;
+using DataAccessLayer.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
@@ -37,6 +38,80 @@ namespace CORNY.Controllers
         public IActionResult FruitCoded()
         {
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var product = await productService.GetProductByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return View(product);
+        }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ProductModel product)
+        {
+            if (ModelState.IsValid)
+            {
+                await productService.CreateProductAsync(product);
+                return RedirectToAction(nameof(Index));
+            }
+            return View(product);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var product = await productService.GetProductByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return View(product);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, ProductModel product)
+        {
+            if (id != product.ProductId)
+            {
+                return BadRequest();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var success = await productService.UpdateProductAsync(product);
+                if (!success)
+                {
+                    return NotFound();
+                }
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(product);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var success = await productService.DeleteProductAsync(id);
+            if (!success)
+            {
+                return NotFound();
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }
