@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -27,7 +28,7 @@ namespace DataAccessLayer.Entities
         [Column("Is_For_Sale")]
         public bool IsForSale { get; set; }
 
-        [Column("Pricing")]
+        [Column("Pricing", TypeName = "decimal(18,2)")]
         public decimal Pricing { get; set; }
 
         [Column("Farm_ID")]

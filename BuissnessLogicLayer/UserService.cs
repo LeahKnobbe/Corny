@@ -57,10 +57,21 @@ namespace BuissnessLogicLayer
 
         public async Task<bool> UpdateUserAsync(UserModel user)
         {
-            if (!string.IsNullOrEmpty(user.Password))
+            var existingUser = await userRepository.GetUserByIdAsync(user.UserId);
+            if (existingUser == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(user.Password))
+            {
+                user.Password = existingUser.Password;
+            }
+            else
             {
                 user.Password = HashPassword(user.Password);
             }
+
             return await userRepository.UpdateUserAsync(user);
         }
 

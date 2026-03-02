@@ -30,6 +30,19 @@ namespace BuissnessLogicLayer
             return await productDbContext.Products.FindAsync(id);
         }
 
+        public async Task<IReadOnlyList<ProductModel>> GetProductsByIdsAsync(IEnumerable<int> productIds)
+        {
+            var ids = productIds.Distinct().ToList();
+            if (ids.Count == 0)
+            {
+                return Array.Empty<ProductModel>();
+            }
+
+            return await productDbContext.Products
+                .Where(product => ids.Contains(product.ProductId))
+                .ToListAsync();
+        }
+
         public async Task<bool> UpdateProductAsync(ProductModel product)
         {
             var existingProduct = await productDbContext.Products.FindAsync(product.ProductId);

@@ -27,6 +27,17 @@ namespace DataAccessLayer.Entities
 
         //bday
 
+
         public DateOnly Bday { get; set; }
+
+        //role
+        public required int Role { get; set; }
+
+        //status
+        public required int Status { get; set; }
+
+        //phone number
+        [Column(TypeName = "nvarchar(25)")]
+        public required string PhoneNumber { get; set; }
     }
 }

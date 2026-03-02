@@ -52,6 +52,9 @@ namespace DataAccessLayer.Interfaces
             existingUser.Email = user.Email;
             existingUser.Password = user.Password;
             existingUser.Bday = user.Bday;
+            existingUser.Role = user.Role;
+            existingUser.Status = user.Status;
+            existingUser.PhoneNumber = user.PhoneNumber;
             await userDbContext.SaveChangesAsync();
             return true;
         }

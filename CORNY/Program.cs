@@ -18,9 +18,12 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddDbContext<ProductDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

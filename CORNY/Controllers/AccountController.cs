@@ -43,7 +43,8 @@ namespace CORNY.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -96,7 +97,10 @@ namespace CORNY.Controllers
                 LastName = model.LastName,
                 Email = model.Email,
                 Password = model.Password, // hashed in service layer
-                Bday = DateOnly.FromDateTime(model.Birthday!.Value)
+                Bday = DateOnly.FromDateTime(model.Birthday!.Value),
+                PhoneNumber = model.PhoneNumber,
+                Role = 0,
+                Status = 0
             };
 
             try

@@ -59,7 +59,51 @@ body {
     gap: 1.5rem;
 }
 
-.fruit-card {
+.fruit-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.fruit-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.fruit-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.fruit-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.fruit-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.fruit-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.fruit-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.fruit-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+    .fruit-card {
     background: #fff;
     border-radius: 14px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
@@ -548,3 +592,10 @@ body {
     .corny-navbar--transparent .corny-icon-button {
         border-color: rgba(255, 255, 255, 0.7);
     }
+
+.cart-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1055;
+}

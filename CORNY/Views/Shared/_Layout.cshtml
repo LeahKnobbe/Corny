@@ -24,13 +24,24 @@
                                 Produce
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="produceDropdown">
-                                <li><a class="dropdown-item" href="/Product/Index">Produce CRUD</a></li>
                                 <li><a class="dropdown-item" href="/Produce/Fruit">Fruit</a></li>
                                 <li><a class="dropdown-item" href="/Produce/FruitCoded">Fruit (Coded)</a></li>
                             </ul>
                         </li>
                         <li><a class="corny-link" href="#">Meat</a></li>
                         <li><a class="corny-link" href="#">Animal Product</a></li>
+                        @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("1"))
+                        {
+                            <li class="dropdown">
+                                <a class="corny-link dropdown-toggle" href="#" id="adminDashboard" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Admin Dashboard
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="adminDashboard">
+                                    <li><a class="dropdown-item" href="/User/Index">User Index</a></li>
+                                    <li><a class="dropdown-item" href="/Product/Index">Product Index</a></li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
 
                     <div class="corny-actions">
@@ -61,7 +72,7 @@
                             </ul>
                         </div>
 
-                        <a class="corny-icon-button" href="#" title="Cart">
+                        <a class="corny-icon-button" asp-controller="Cart" asp-action="Index" title="Cart">
                             <img src="~/images/CartWhiteButton.png" alt="Cart" />
                         </a>
                     </div>
@@ -84,5 +95,12 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    @if (TempData["CartMessage"] is string cartMessage)
+    {
+        <div id="cart-toast" class="alert alert-success cart-toast" role="alert">
+            @cartMessage
+        </div>
+    }
 </body>
 </html>

@@ -1,4 +1,8 @@
-﻿@{
+﻿@using System
+@using System.Linq
+@model IEnumerable<DataAccessLayer.Entities.ProductModel>
+
+@{
     ViewData["Title"] = "Home";
     ViewData["MainClass"] = "container-fluid p-0";
     ViewData["NavbarClass"] = "corny-navbar corny-navbar--transparent";
@@ -13,40 +17,39 @@
 
 <section class="home-top">
     <div class="home-top__header">
-        <h2 class="home-top__title">Top Sellers</h2>
+        <h2 class="home-top__title">All Products</h2>
     </div>
 
-    <div class="home-top__grid">
-        <article class="home-card">
-            <img class="home-card__image" src="~/images/Honey.png" alt="Raw Wildflower Honey" />
-            <h3 class="home-card__name">Raw Wildflower Honey</h3>
-            <p class="home-card__price">$11.99</p>
-            <div class="home-card__rating">★★★★★</div>
-            <button class="home-card__button">Add to Cart</button>
-        </article>
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No products are available yet.</p>
+    }
+    else
+    {
+        <div class="home-top__grid">
+            @foreach (var product in Model)
+            {
+                <article class="home-card">
+                    <a class="home-card-link"
+                       asp-controller="Product"
+                       asp-action="Details"
+                       asp-route-id="@product.ProductId">
+                        <img class="home-card__image"
+                             src="https://via.placeholder.com/240x180?text=@Uri.EscapeDataString(product.Name)"
+                             alt="@product.Name" />
+                        <h3 class="home-card__name">@product.Name</h3>
+                        <p class="home-card__price">$@product.Pricing.ToString("0.00")</p>
+                        <div class="home-card__rating">★★★★★</div>
+                    </a>
 
-        <article class="home-card">
-            <img class="home-card__image" src="~/images/Apples.png" alt="Gala Apples" />
-            <h3 class="home-card__name">Gala Apples</h3>
-            <p class="home-card__price">$1.99</p>
-            <div class="home-card__rating">★★★★★</div>
-            <button class="home-card__button">Add to Cart</button>
-        </article>
-
-        <article class="home-card">
-            <img class="home-card__image" src="~/images/Watermelon.png" alt="Seedless Watermelon" />
-            <h3 class="home-card__name">Seedless Watermelon</h3>
-            <p class="home-card__price">$6.99</p>
-            <div class="home-card__rating">★★★★★</div>
-            <button class="home-card__button">Add to Cart</button>
-        </article>
-
-        <article class="home-card">
-            <img class="home-card__image" src="~/images/Chicken.png" alt="Chicken Meat" />
-            <h3 class="home-card__name">Chicken Meat</h3>
-            <p class="home-card__price">$16.99</p>
-            <div class="home-card__rating">★★★★★</div>
-            <button class="home-card__button">Add to Cart</button>
-        </article>
-    </div>
+                    <form asp-controller="Cart" asp-action="Add" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@product.ProductId" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <button class="home-card__button" type="submit">Add to Cart</button>
+                    </form>
+                </article>
+            }
+        </div>
+    }
 </section>

@@ -2,35 +2,33 @@
 using DataAccessLayer.Entities;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace CORNY.Controllers
 {
-
-    /// Handles user-related views.
     public class UserController : Controller
     {
-        // Provides user data and operations.
         private readonly IUserService userService;
-
-
-        /// Initializes a new instance of the iuserservice class.
 
         public UserController(IUserService userService)
         {
             this.userService = userService;
         }
 
+        
         public async Task<IActionResult> Index()
         {
             var users = await userService.GetUsersAsync();
             return View(users);
         }
 
+        
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserModel user)
@@ -43,6 +41,7 @@ namespace CORNY.Controllers
             return View(user);
         }
 
+        
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -54,6 +53,7 @@ namespace CORNY.Controllers
             return View(user);
         }
 
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, UserModel user)
@@ -76,6 +76,7 @@ namespace CORNY.Controllers
             return View(user);
         }
 
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
