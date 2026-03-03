@@ -13,5 +13,7 @@ namespace DataAccessLayer.Data
         public DbSet<ProductModel> Products { get; set; }
 
         public DbSet<CartItemModel> CartItems { get; set; }
+
+        public DbSet<ProductImageModel> ProductImages { get; set; }
     }
 }

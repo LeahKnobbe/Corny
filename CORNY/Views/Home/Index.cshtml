@@ -29,13 +29,17 @@
         <div class="home-top__grid">
             @foreach (var product in Model)
             {
+                var imageUrl = string.IsNullOrWhiteSpace(product.ImageUrl)
+                    ? $"https://via.placeholder.com/240x180?text={Uri.EscapeDataString(product.Name)}"
+                    : product.ImageUrl;
+
                 <article class="home-card">
                     <a class="home-card-link"
                        asp-controller="Product"
                        asp-action="Details"
                        asp-route-id="@product.ProductId">
                         <img class="home-card__image"
-                             src="https://via.placeholder.com/240x180?text=@Uri.EscapeDataString(product.Name)"
+                             src="@imageUrl"
                              alt="@product.Name" />
                         <h3 class="home-card__name">@product.Name</h3>
                         <p class="home-card__price">$@product.Pricing.ToString("0.00")</p>

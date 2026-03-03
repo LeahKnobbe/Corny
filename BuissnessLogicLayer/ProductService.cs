@@ -43,6 +43,37 @@ namespace BuissnessLogicLayer
                 .ToListAsync();
         }
 
+        public async Task<IReadOnlyList<ProductImageModel>> GetProductImagesAsync(int productId)
+        {
+            return await productDbContext.ProductImages
+                .Where(image => image.ProductId == productId)
+                .OrderBy(image => image.SortOrder)
+                .ToListAsync();
+        }
+
+        public async Task AddProductImagesAsync(int productId, IReadOnlyList<string> imageUrls)
+        {
+            if (imageUrls.Count == 0)
+            {
+                return;
+            }
+
+            var maxSortOrder = await productDbContext.ProductImages
+                .Where(image => image.ProductId == productId)
+                .Select(image => (int?)image.SortOrder)
+                .MaxAsync() ?? -1;
+
+            var newImages = imageUrls.Select((url, index) => new ProductImageModel
+            {
+                ProductId = productId,
+                ImageUrl = url,
+                SortOrder = maxSortOrder + index + 1
+            });
+
+            productDbContext.ProductImages.AddRange(newImages);
+            await productDbContext.SaveChangesAsync();
+        }
+
         public async Task<bool> UpdateProductAsync(ProductModel product)
         {
             var existingProduct = await productDbContext.Products.FindAsync(product.ProductId);
@@ -59,6 +90,7 @@ namespace BuissnessLogicLayer
             existingProduct.Pricing = product.Pricing;
             existingProduct.FarmId = product.FarmId;
             existingProduct.CategoryId = product.CategoryId;
+            existingProduct.ImageUrl = product.ImageUrl;
 
             await productDbContext.SaveChangesAsync();
             return true;

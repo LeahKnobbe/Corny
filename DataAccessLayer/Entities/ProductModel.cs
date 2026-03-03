@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -36,5 +35,8 @@ namespace DataAccessLayer.Entities
 
         [Column("Category_ID")]
         public int CategoryId { get; set; }
+
+        [Column("Image_Url")]
+        public string? ImageUrl { get; set; }
     }
 }

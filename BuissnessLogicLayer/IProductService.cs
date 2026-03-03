@@ -9,6 +9,8 @@ namespace BuissnessLogicLayer
         Task<ProductModel> CreateProductAsync(ProductModel product);
         Task<ProductModel?> GetProductByIdAsync(int id);
         Task<IReadOnlyList<ProductModel>> GetProductsByIdsAsync(IEnumerable<int> productIds);
+        Task<IReadOnlyList<ProductImageModel>> GetProductImagesAsync(int productId);
+        Task AddProductImagesAsync(int productId, IReadOnlyList<string> imageUrls);
         Task<bool> UpdateProductAsync(ProductModel product);
         Task<bool> DeleteProductAsync(int id);
     }

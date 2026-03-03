@@ -1,4 +1,4 @@
-@model DataAccessLayer.Entities.ProductModel
+@model CORNY.Models.ViewModels.ProductFormViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -6,8 +6,9 @@
 
 <h1>Edit</h1>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="ProductId" />
+    <input type="hidden" asp-for="ImageUrl" />
     <div class="form-group">
         <label asp-for="Name"></label>
         <input asp-for="Name" class="form-control" />
@@ -47,6 +48,11 @@
         <label asp-for="CategoryId"></label>
         <input asp-for="CategoryId" class="form-control" />
         <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="ImageFiles">Add Images</label>
+        <input asp-for="ImageFiles" type="file" class="form-control" multiple />
+        <span asp-validation-for="ImageFiles" class="text-danger"></span>
     </div>
     <button type="submit" class="btn btn-primary">Save</button>
     <a asp-action="Index" class="btn btn-secondary">Back to List</a>

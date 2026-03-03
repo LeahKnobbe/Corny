@@ -1,0 +1,29 @@
+using Microsoft.AspNetCore.Http;
+
+namespace CORNY.Models.ViewModels
+{
+    public class ProductFormViewModel
+    {
+        public int ProductId { get; set; }
+
+        public string Name { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
+        public string? Sizing { get; set; }
+
+        public int InventoryQuantity { get; set; }
+
+        public bool IsForSale { get; set; }
+
+        public decimal Pricing { get; set; }
+
+        public int FarmId { get; set; }
+
+        public int CategoryId { get; set; }
+
+        public string? ImageUrl { get; set; }
+
+        public IList<IFormFile> ImageFiles { get; set; } = new List<IFormFile>();
+    }
+}

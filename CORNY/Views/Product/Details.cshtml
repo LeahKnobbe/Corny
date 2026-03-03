@@ -1,32 +1,55 @@
-@model DataAccessLayer.Entities.ProductModel
+@model CORNY.Models.ViewModels.ProductDetailsViewModel
 
 @{
     ViewData["Title"] = "Details";
+    var hasImages = Model.ImageUrls.Any();
 }
 
 <h1>Details</h1>
 
+@if (hasImages)
+{
+    <div id="productCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            @for (var i = 0; i < Model.ImageUrls.Count; i++)
+            {
+                <div class="carousel-item @(i == 0 ? "active" : "")">
+                    <img class="product-carousel__image" src="@Model.ImageUrls[i]" alt="@Model.Product.Name" />
+                </div>
+            }
+        </div>
+        @if (Model.ImageUrls.Count > 1)
+        {
+            <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        }
+    </div>
+}
+
 <dl class="row">
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.ProductId)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.ProductId)</dd>
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.ProductId)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.ProductId)</dd>
 
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Name)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.Name)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.Name)</dd>
 
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Description)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Description)</dd>
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.Description)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.Description)</dd>
 
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Sizing)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Sizing)</dd>
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.Sizing)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.Sizing)</dd>
 
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.InventoryQuantity)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.InventoryQuantity)</dd>
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.InventoryQuantity)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.InventoryQuantity)</dd>
 
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Pricing)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Pricing)</dd>
-
-
+    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.Pricing)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.Pricing)</dd>
 </dl>
-
 
 <a asp-action="Fruit">Back to Fruits</a>

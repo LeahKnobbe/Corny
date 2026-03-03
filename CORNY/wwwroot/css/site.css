@@ -599,3 +599,18 @@ body {
     right: 1.5rem;
     z-index: 1055;
 }
+
+.product-carousel__image {
+    max-width: 480px;
+    max-height: 320px;
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+    object-fit: contain;
+}
+
+#productCarousel .carousel-control-prev-icon,
+#productCarousel .carousel-control-next-icon {
+    filter: invert(34%) sepia(54%) saturate(484%) hue-rotate(74deg) brightness(92%) contrast(90%);
+}
