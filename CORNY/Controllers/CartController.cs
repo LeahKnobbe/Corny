@@ -28,6 +28,7 @@ namespace CORNY.Controllers
             }
 
             var cartItems = await cartService.GetCartItemsAsync(userId.Value);
+
             var products = await productService.GetProductsByIdsAsync(cartItems.Select(item => item.ProductId));
             var productLookup = products.ToDictionary(product => product.ProductId);
 
@@ -38,7 +39,8 @@ namespace CORNY.Controllers
                     .Select(item => new CartItemViewModel
                     {
                         Product = productLookup[item.ProductId],
-                        Quantity = item.Quantity
+                        Quantity = item.Quantity,
+                        ImageUrl = productLookup[item.ProductId].ImageUrl
                     })
                     .ToList()
             };
@@ -48,7 +50,7 @@ namespace CORNY.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Add(int productId, string? returnUrl)
+        public async Task<IActionResult> Add(int productId, int quantity = 1, string? returnUrl = null)
         {
             var userId = GetUserId();
             if (userId == null)
@@ -56,7 +58,12 @@ namespace CORNY.Controllers
                 return Challenge();
             }
 
-            await cartService.AddToCartAsync(userId.Value, productId);
+            if (quantity < 1)
+            {
+                quantity = 1;
+            }
+
+            await cartService.AddToCartAsync(userId.Value, productId, quantity);
 
             var product = await productService.GetProductByIdAsync(productId);
             TempData["CartMessage"] = product == null

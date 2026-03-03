@@ -13,8 +13,13 @@ namespace BuissnessLogicLayer
             this.productDbContext = productDbContext;
         }
 
-        public async Task AddToCartAsync(int userId, int productId)
+        public async Task AddToCartAsync(int userId, int productId, int quantity)
         {
+            if (quantity < 1)
+            {
+                quantity = 1;
+            }
+
             var existingItem = await productDbContext.CartItems
                 .FirstOrDefaultAsync(item => item.UserId == userId && item.ProductId == productId);
 
@@ -24,12 +29,12 @@ namespace BuissnessLogicLayer
                 {
                     UserId = userId,
                     ProductId = productId,
-                    Quantity = 1
+                    Quantity = quantity
                 });
             }
             else
             {
-                existingItem.Quantity += 1;
+                existingItem.Quantity += quantity;
             }
 
             await productDbContext.SaveChangesAsync();

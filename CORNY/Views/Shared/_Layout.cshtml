@@ -102,5 +102,16 @@
             @cartMessage
         </div>
     }
+    <script>
+        (function () {
+          var host = document.querySelector('.cart-toast');
+          if (!host) return;
+
+          // If the toast persists across pages, remove it automatically
+          window.setTimeout(function () {
+            host.remove();
+          }, 3000);
+        })();
+    </script>
 </body>
 </html>

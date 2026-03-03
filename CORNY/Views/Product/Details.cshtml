@@ -1,55 +1,259 @@
 @model CORNY.Models.ViewModels.ProductDetailsViewModel
 
 @{
-    ViewData["Title"] = "Details";
-    var hasImages = Model.ImageUrls.Any();
+    ViewData["Title"] = Model?.Product?.Name ?? "Details";
+    var hasImages = Model?.ImageUrls != null && Model.ImageUrls.Any();
+
+    // Treat Product.Description as a SHORT subtitle (concept: "Raw Wildflower")
+    var subtitle = (Model?.Product?.Description ?? "").Trim();
+
+    // Split sizing into pills if possible
+    var sizingRaw = (Model?.Product?.Sizing ?? "").Trim();
+    var sizes = sizingRaw
+        .Split(new[] { ",", "/", "|", ";" }, StringSplitOptions.RemoveEmptyEntries)
+        .Select(s => s.Trim())
+        .Where(s => !string.IsNullOrWhiteSpace(s))
+        .ToList();
+
+    if (sizes.Count == 0 && !string.IsNullOrWhiteSpace(sizingRaw))
+    {
+        sizes.Add(sizingRaw);
+    }
+
+    var defaultSize = sizes.FirstOrDefault() ?? "";
 }
 
-<h1>Details</h1>
+<section class="pd-page">
+    <nav class="pd-breadcrumb" aria-label="Breadcrumb">
+        <a asp-controller="Home" asp-action="Index">Home</a>
+        <span class="pd-breadcrumb__sep">&gt;</span>
+        <a asp-action="Fruit">Produce</a>
+        <span class="pd-breadcrumb__sep">&gt;</span>
+        <span class="pd-breadcrumb__current">@Model.Product.Name</span>
+    </nav>
 
-@if (hasImages)
-{
-    <div id="productCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            @for (var i = 0; i < Model.ImageUrls.Count; i++)
+    <div class="pd-shell">
+        <!-- LEFT: Gallery -->
+        <div class="pd-gallery">
+            @if (hasImages)
             {
-                <div class="carousel-item @(i == 0 ? "active" : "")">
-                    <img class="product-carousel__image" src="@Model.ImageUrls[i]" alt="@Model.Product.Name" />
+                <div class="pd-gallery__grid">
+                    <div class="pd-thumbs" aria-label="Product images">
+                        @for (var i = 0; i < Model.ImageUrls.Count; i++)
+                        {
+                            <button class="pd-thumb @(i == 0 ? "is-active" : "")"
+                                    type="button"
+                                    data-bs-target="#productCarousel"
+                                    data-bs-slide-to="@i"
+                                    aria-label="View image @(i + 1)">
+                                <img src="@Model.ImageUrls[i]" alt="@Model.Product.Name thumbnail @(i + 1)" />
+                            </button>
+                        }
+                    </div>
+
+                    <div class="pd-stage">
+                        <div id="productCarousel" class="carousel slide" data-bs-ride="false">
+                            <div class="carousel-inner pd-carousel__inner">
+                                @for (var i = 0; i < Model.ImageUrls.Count; i++)
+                                {
+                                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                                        <div class="pd-stage__frame">
+                                            <img class="pd-stage__image" src="@Model.ImageUrls[i]" alt="@Model.Product.Name" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (Model.ImageUrls.Count > 1)
+                            {
+                                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="pd-stage__frame pd-stage__frame--empty">
+                    <div class="pd-empty">
+                        <div class="pd-empty__title">No image available</div>
+                        <div class="pd-empty__sub">Images will appear here when they’re added.</div>
+                    </div>
                 </div>
             }
         </div>
-        @if (Model.ImageUrls.Count > 1)
-        {
-            <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-            </button>
-        }
+
+        <!-- RIGHT: Info -->
+        <aside class="pd-info" aria-label="Product details">
+            <h1 class="pd-title">@Model.Product.Name</h1>
+
+            @if (!string.IsNullOrWhiteSpace(subtitle))
+            {
+                <p class="pd-subtitle">@subtitle</p>
+            }
+
+            <div class="pd-price" aria-label="Price">
+                $@Model.Product.Pricing.ToString("0.00")
+            </div>
+
+            <div class="pd-divider"></div>
+
+            <form class="pd-form"
+                  asp-controller="Cart"
+                  asp-action="Add"
+                  method="post">
+                @* If your app uses antiforgery, keep this *@
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="productId" value="@Model.Product.ProductId" />
+                <input type="hidden" name="size" id="pdSelectedSize" value="@defaultSize" />
+
+                <div class="pd-block">
+                    <div class="pd-block__label">Size</div>
+
+                    <div class="pd-sizes" role="group" aria-label="Choose size">
+                        @if (sizes.Count > 0)
+                        {
+                            for (var i = 0; i < sizes.Count; i++)
+                            {
+                                var size = sizes[i];
+                                <button class="pd-size @(i == 0 ? "is-selected" : "")"
+                                        type="button"
+                                        data-size="@size">
+                                    @size
+                                </button>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="pd-block">
+                    <div class="pd-block__label">Quantity</div>
+
+                    <!-- Quantity -->
+                    <div class="pd-qty" aria-label="Quantity selector">
+                        <button class="pd-qty__btn" type="button" data-qty="-1" aria-label="Decrease quantity">-</button>
+                        <input class="pd-qty__input"
+                               type="number"
+                               name="quantity"
+                               min="1"
+                               step="1"
+                               value="1"
+                               inputmode="numeric"
+                               aria-label="Quantity" />
+                        <button class="pd-qty__btn" type="button" data-qty="1" aria-label="Increase quantity">+</button>
+                    </div>
+                </div>
+
+                <button class="pd-add" type="submit">Add to cart</button>
+
+                <div class="pd-fulfillment">
+                    <div class="pd-fulfillment__title">Pickup, delivery, and shipping</div>
+
+                    <ul class="pd-fulfillment__list">
+                        <li class="pd-fulfillment__item">
+                            <!-- SWAPPED: Available now uses the CheckLeaf icon -->
+                            <img class="pd-fulfillment__icon"
+                                 src="~/images/details/DetailsGreenCheckLeaf.png"
+                                 alt=""
+                                 aria-hidden="true" />
+                            <span><strong>Available</strong></span>
+                        </li>
+
+                        <li class="pd-fulfillment__item">
+                            <!-- SWAPPED: Early as Tomorrow now uses the Availability icon -->
+                            <img class="pd-fulfillment__icon"
+                                 src="~/images/details/DetailsGreenAvailability.png"
+                                 alt=""
+                                 aria-hidden="true" />
+                            <span><strong>Early as Tomorrow</strong></span>
+                        </li>
+
+                        <li class="pd-fulfillment__item">
+                            <img class="pd-fulfillment__icon"
+                                 src="~/images/details/DetailsGreenShippingTruck.png"
+                                 alt=""
+                                 aria-hidden="true" />
+                            <span><strong>Shipping</strong></span>
+                        </li>
+                    </ul>
+                </div>
+
+                @* No stock display unless you confirm it's DB-backed and accurate *@
+            </form>
+
+            <section class="pd-about" aria-label="About this item">
+                <h2 class="pd-about__title">About this item</h2>
+                <p class="pd-about__text text-muted">
+                    Longer description coming soon.
+                </p>
+            </section>
+
+            <a class="pd-back" asp-action="Fruit">Back to Fruits</a>
+        </aside>
     </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            // Thumbnails sync with carousel
+            var carousel = document.getElementById('productCarousel');
+            var thumbs = Array.prototype.slice.call(document.querySelectorAll('.pd-thumb'));
+            if (carousel && thumbs.length) {
+                carousel.addEventListener('slid.bs.carousel', function (evt) {
+                    thumbs.forEach(function (t) { t.classList.remove('is-active'); });
+                    var idx = evt.to;
+                    if (thumbs[idx]) thumbs[idx].classList.add('is-active');
+                });
+
+                thumbs.forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        thumbs.forEach(function (t) { t.classList.remove('is-active'); });
+                        btn.classList.add('is-active');
+                    });
+                });
+            }
+
+            // Size selection -> hidden input
+            var sizeInput = document.getElementById('pdSelectedSize');
+            var sizeButtons = Array.prototype.slice.call(document.querySelectorAll('.pd-size[data-size]'));
+            if (sizeInput && sizeButtons.length) {
+                sizeButtons.forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        sizeButtons.forEach(function (b) { b.classList.remove('is-selected'); });
+                        btn.classList.add('is-selected');
+                        sizeInput.value = btn.getAttribute('data-size') || '';
+                    });
+                });
+            }
+
+            // Quantity stepper
+            var qtyInput = document.querySelector('.pd-qty__input');
+            var qtyBtns = Array.prototype.slice.call(document.querySelectorAll('.pd-qty__btn[data-qty]'));
+            if (qtyInput && qtyBtns.length) {
+                qtyBtns.forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var delta = parseInt(btn.getAttribute('data-qty'), 10) || 0;
+                        var current = parseInt(qtyInput.value, 10);
+                        if (isNaN(current) || current < 1) current = 1;
+                        var next = current + delta;
+                        if (next < 1) next = 1;
+                        qtyInput.value = next;
+                    });
+                });
+            }
+        })();
+    </script>
 }
-
-<dl class="row">
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.ProductId)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.ProductId)</dd>
-
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.Name)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.Name)</dd>
-
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.Description)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.Description)</dd>
-
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.Sizing)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.Sizing)</dd>
-
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.InventoryQuantity)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.InventoryQuantity)</dd>
-
-    <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Product.Pricing)</dt>
-    <dd class="col-sm-10">@Html.DisplayFor(model => model.Product.Pricing)</dd>
-</dl>
-
-<a asp-action="Fruit">Back to Fruits</a>
