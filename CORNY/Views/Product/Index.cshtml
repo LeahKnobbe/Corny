@@ -38,9 +38,11 @@
                 <td>@Html.DisplayFor(modelItem => item.FarmId)</td>
                 <td>@Html.DisplayFor(modelItem => item.CategoryId)</td>
                 <td>
-                    @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                    @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                    @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+                    <a asp-action="Edit" asp-route-id="@item.ProductId">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.ProductId">Details</a> |
+                    <form asp-action="Delete" asp-route-id="@item.ProductId" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-link p-0">Delete</button>
+                    </form>
                 </td>
             </tr>
         }

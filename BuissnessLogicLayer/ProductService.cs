@@ -17,5 +17,113 @@ namespace BuissnessLogicLayer
         {
             return await productDbContext.Products.ToListAsync();
         }
+
+        public async Task<ProductModel> CreateProductAsync(ProductModel product)
+        {
+            productDbContext.Products.Add(product);
+            await productDbContext.SaveChangesAsync();
+            return product;
+        }
+
+        public async Task<ProductModel?> GetProductByIdAsync(int id)
+        {
+            return await productDbContext.Products.FindAsync(id);
+        }
+
+        public async Task<IReadOnlyList<ProductModel>> GetProductsByIdsAsync(IEnumerable<int> productIds)
+        {
+            var ids = productIds.Distinct().ToList();
+            if (ids.Count == 0)
+            {
+                return Array.Empty<ProductModel>();
+            }
+
+            return await productDbContext.Products
+                .Where(product => ids.Contains(product.ProductId))
+                .ToListAsync();
+        }
+
+        public async Task<IReadOnlyList<ProductImageModel>> GetProductImagesAsync(int productId)
+        {
+            return await productDbContext.ProductImages
+                .Where(image => image.ProductId == productId)
+                .OrderBy(image => image.SortOrder)
+                .ToListAsync();
+        }
+
+        public async Task<ProductImageModel?> GetProductImageByIdAsync(int productImageId)
+        {
+            return await productDbContext.ProductImages.FindAsync(productImageId);
+        }
+
+        public async Task AddProductImagesAsync(int productId, IReadOnlyList<string> imageUrls)
+        {
+            if (imageUrls.Count == 0)
+            {
+                return;
+            }
+
+            var maxSortOrder = await productDbContext.ProductImages
+                .Where(image => image.ProductId == productId)
+                .Select(image => (int?)image.SortOrder)
+                .MaxAsync() ?? -1;
+
+            var newImages = imageUrls.Select((url, index) => new ProductImageModel
+            {
+                ProductId = productId,
+                ImageUrl = url,
+                SortOrder = maxSortOrder + index + 1
+            });
+
+            productDbContext.ProductImages.AddRange(newImages);
+            await productDbContext.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteProductImageAsync(int productImageId)
+        {
+            var image = await productDbContext.ProductImages.FindAsync(productImageId);
+            if (image == null)
+            {
+                return false;
+            }
+
+            productDbContext.ProductImages.Remove(image);
+            await productDbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateProductAsync(ProductModel product)
+        {
+            var existingProduct = await productDbContext.Products.FindAsync(product.ProductId);
+            if (existingProduct == null)
+            {
+                return false;
+            }
+
+            existingProduct.Name = product.Name;
+            existingProduct.Description = product.Description;
+            existingProduct.Sizing = product.Sizing;
+            existingProduct.InventoryQuantity = product.InventoryQuantity;
+            existingProduct.IsForSale = product.IsForSale;
+            existingProduct.Pricing = product.Pricing;
+            existingProduct.FarmId = product.FarmId;
+            existingProduct.CategoryId = product.CategoryId;
+            existingProduct.ImageUrl = product.ImageUrl;
+
+            await productDbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteProductAsync(int id)
+        {
+            var product = await productDbContext.Products.FindAsync(id);
+            if (product == null)
+            {
+                return false;
+            }
+            productDbContext.Products.Remove(product);
+            await productDbContext.SaveChangesAsync();
+            return true;
+        }
     }
 }

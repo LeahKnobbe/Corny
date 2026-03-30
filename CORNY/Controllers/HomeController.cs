@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using BuissnessLogicLayer;
 using CORNY.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,15 +8,18 @@ namespace CORNY.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IProductService productService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IProductService productService)
         {
             _logger = logger;
+            this.productService = productService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var products = await productService.GetProductsAsync();
+            return View(products);
         }
 
         public IActionResult Privacy()

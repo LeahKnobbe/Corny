@@ -2,109 +2,115 @@
 
 @{
     ViewData["Title"] = "Register";
+    Layout = null;
 }
 
-<div class="container" style="max-width: 720px;">
-    <h1 class="mb-4">Register</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Corny</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="register-page">
+    <header class="auth-nav auth-nav--green">
+        <a class="auth-nav__brand" asp-controller="Home" asp-action="Index">Corny</a>
+    </header>
 
-    <form asp-action="Register" method="post">
-        @Html.AntiForgeryToken()
+    <div class="register-hero">
+        <div class="register-card">
+            <h1 class="register-title">Register</h1>
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label asp-for="FirstName" class="form-label">
-                    @Html.DisplayNameFor(m => m.FirstName) <span class="text-danger">*</span>
-                </label>
-                <input asp-for="FirstName" class="form-control" />
-                <span asp-validation-for="FirstName" class="text-danger"></span>
-            </div>
+            <form asp-action="Register" method="post" class="register-form">
+                @Html.AntiForgeryToken()
 
-            <div class="col-md-6">
-                <label asp-for="LastName" class="form-label">
-                    @Html.DisplayNameFor(m => m.LastName) <span class="text-danger">*</span>
-                </label>
-                <input asp-for="LastName" class="form-control" />
-                <span asp-validation-for="LastName" class="text-danger"></span>
-            </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FirstName" class="form-label">First Name</label>
+                        <input asp-for="FirstName" class="form-control" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
 
-            <div class="col-12">
-                <label asp-for="Email" class="form-label">
-                    Email address <span class="text-danger">*</span>
-                </label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
+                    <div class="col-md-6">
+                        <label asp-for="LastName" class="form-label">Last Name</label>
+                        <input asp-for="LastName" class="form-control" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
 
-            <div class="col-md-6">
-                <label asp-for="PhoneNumber" class="form-label">
-                    Phone Number <span class="text-danger">*</span>
-                </label>
-                <input asp-for="PhoneNumber" class="form-control" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
+                    <div class="col-12">
+                        <label asp-for="Email" class="form-label">Email address</label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
 
-            <div class="col-md-6">
-                <label asp-for="Birthday" class="form-label">
-                    Birthday <span class="text-danger">*</span>
-                </label>
-                <input asp-for="Birthday" type="date" class="form-control" />
-                <span asp-validation-for="Birthday" class="text-danger"></span>
-                <div class="text-muted mt-1">Must be 18+ to make an account.</div>
-            </div>
+                    <div class="col-md-6">
+                        <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
 
-            <div class="col-md-6">
-                <label asp-for="Password" class="form-label">
-                    Password <span class="text-danger">*</span>
-                </label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
+                    <div class="col-md-6">
+                        <label asp-for="Birthday" class="form-label">Birthday</label>
+                        <input asp-for="Birthday" type="date" class="form-control" />
+                        <span asp-validation-for="Birthday" class="text-danger"></span>
+                        <div class="text-muted mt-1">Must be 18+ to make an account.</div>
+                    </div>
 
-            <div class="col-md-6">
-                <label asp-for="ConfirmPassword" class="form-label">
-                    Re-type Password <span class="text-danger">*</span>
-                </label>
-                <input asp-for="ConfirmPassword" class="form-control" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-            </div>
+                    <div class="col-md-6">
+                        <label asp-for="Password" class="form-label">Password</label>
+                        <input asp-for="Password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
 
-            <div class="col-12 mt-2">
-                <div class="form-check">
-                    <input asp-for="AcceptTerms" class="form-check-input" />
-                    <label class="form-check-label" for="AcceptTerms">
-                        To create an account you must comply with our Terms and Conditions and our Privacy Policy
-                        <span class="text-danger">*</span>
-                    </label>
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword" class="form-label">Re-type Password</label>
+                        <input asp-for="ConfirmPassword" class="form-control" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 mt-2">
+                        <div class="form-check">
+                            <input asp-for="AcceptTerms" class="form-check-input" />
+                            <label class="form-check-label" for="AcceptTerms">
+                                To create an account you must comply with our Terms and Conditions and our Privacy Policy
+                            </label>
+                        </div>
+
+                        <span asp-validation-for="AcceptTerms" class="text-danger d-block mt-1"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="register-button">Sign Up</button>
+                    </div>
                 </div>
+            </form>
 
-                <!-- d-block forces the message onto its own line under the checkbox -->
-                <span asp-validation-for="AcceptTerms" class="text-danger d-block mt-1"></span>
-            </div>
-
-            <div class="col-12">
-                <button type="submit" class="btn btn-success w-100 py-2">Sign Up</button>
+            <div class="register-links">
+                <a asp-action="Login">Already have an account? Log in</a>
             </div>
         </div>
-    </form>
 
-    <div class="mt-3">
-        <a asp-action="Login">Already have an account? Log in</a>
+        <div class="register-side"></div>
     </div>
-</div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        // Client-side validation for [MustBeTrue]
-        (function () {
-            if (!window.jQuery || !$.validator || !$.validator.unobtrusive) return;
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+        <script>
+            (function () {
+                if (!window.jQuery || !$.validator || !$.validator.unobtrusive) return;
 
-            $.validator.addMethod("mustbetrue", function (value, element) {
-                return element.checked === true;
-            });
+                $.validator.addMethod("mustbetrue", function (value, element) {
+                    return element.checked === true;
+                });
 
-            $.validator.unobtrusive.adapters.addBool("mustbetrue");
-        })();
-    </script>
-}
+                $.validator.unobtrusive.adapters.addBool("mustbetrue");
+            })();
+        </script>
+    }
+</body>
+</html>

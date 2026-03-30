@@ -1,0 +1,58 @@
+﻿@using System
+@using System.Linq
+@model IEnumerable<DataAccessLayer.Entities.ProductModel>
+
+@{
+    ViewData["Title"] = "Produce";
+}
+
+<section class="fruit-page">
+    <nav class="fruit-breadcrumb" aria-label="Breadcrumb">
+        <a asp-controller="Home" asp-action="Index">Home</a>
+        <span class="fruit-breadcrumb__sep">&gt;</span>
+        <span class="fruit-breadcrumb__current">Produce</span>
+    </nav>
+
+    <h1 class="fruit-title">Produce</h1>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No produce products are available yet.</p>
+    }
+    else
+    {
+        <div class="fruit-grid">
+            @foreach (var produce in Model)
+            {
+                var imageUrl = string.IsNullOrWhiteSpace(produce.ImageUrl)
+                    ? $"https://via.placeholder.com/240x180?text={Uri.EscapeDataString(produce.Name)}"
+                    : produce.ImageUrl;
+
+                <article class="fruit-card">
+                    <a class="fruit-card-link"
+                       asp-controller="Product"
+                       asp-action="Details"
+                       asp-route-id="@produce.ProductId">
+                        <img class="fruit-card__image"
+                             src="@imageUrl"
+                             alt="@produce.Name" />
+
+                        <div class="fruit-card__body">
+                            <h2 class="fruit-card__name">@produce.Name</h2>
+                            <div class="fruit-card__price">$@produce.Pricing.ToString("0.00")</div>
+                            <div class="fruit-card__rating">★★★★★</div>
+                        </div>
+                    </a>
+
+                    <form asp-controller="Cart" asp-action="Add" method="post" class="fruit-card__form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@produce.ProductId" />
+                        <input type="hidden" name="quantity" value="1" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <button class="fruit-card__button" type="submit">Add to Cart</button>
+                    </form>
+                </article>
+            }
+        </div>
+    }
+</section>

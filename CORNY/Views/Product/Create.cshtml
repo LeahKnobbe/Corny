@@ -1,0 +1,61 @@
+@model CORNY.Models.ViewModels.ProductFormViewModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Sizing"></label>
+        <input asp-for="Sizing" class="form-control" />
+        <span asp-validation-for="Sizing" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="InventoryQuantity"></label>
+        <input asp-for="InventoryQuantity" class="form-control" />
+        <span asp-validation-for="InventoryQuantity" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="IsForSale"></label>
+        <input asp-for="IsForSale" class="form-check-input" />
+        <span asp-validation-for="IsForSale" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Pricing"></label>
+        <input asp-for="Pricing" class="form-control" />
+        <span asp-validation-for="Pricing" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="FarmId"></label>
+        <input asp-for="FarmId" class="form-control" />
+        <span asp-validation-for="FarmId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="CategoryId"></label>
+        <input asp-for="CategoryId" class="form-control" />
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="ImageFiles">Images</label>
+        <input asp-for="ImageFiles" type="file" class="form-control" multiple />
+        <span asp-validation-for="ImageFiles" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

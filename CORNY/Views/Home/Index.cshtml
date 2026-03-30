@@ -1,8 +1,59 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using System
+@using System.Linq
+@model IEnumerable<DataAccessLayer.Entities.ProductModel>
+
+@{
+    ViewData["Title"] = "Home";
+    ViewData["MainClass"] = "container-fluid p-0";
+    ViewData["NavbarClass"] = "corny-navbar corny-navbar--transparent";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="home-hero">
+    <div class="home-hero__overlay">
+        <h1 class="home-hero__title">Gathered with care,<br />delivered fresh</h1>
+        <a class="home-hero__button" href="/Produce/FruitCoded">Shop Fresh</a>
+    </div>
+</section>
+
+<section class="home-top">
+    <div class="home-top__header">
+        <h2 class="home-top__title">All Products</h2>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No products are available yet.</p>
+    }
+    else
+    {
+        <div class="home-top__grid">
+            @foreach (var product in Model)
+            {
+                var imageUrl = string.IsNullOrWhiteSpace(product.ImageUrl)
+                    ? $"https://via.placeholder.com/240x180?text={Uri.EscapeDataString(product.Name)}"
+                    : product.ImageUrl;
+
+                <article class="home-card">
+                    <a class="home-card-link"
+                       asp-controller="Product"
+                       asp-action="Details"
+                       asp-route-id="@product.ProductId">
+                        <img class="home-card__image"
+                             src="@imageUrl"
+                             alt="@product.Name" />
+                        <h3 class="home-card__name">@product.Name</h3>
+                        <p class="home-card__price">$@product.Pricing.ToString("0.00")</p>
+                        <div class="home-card__rating">★★★★★</div>
+                    </a>
+
+                    <form asp-controller="Cart" asp-action="Add" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@product.ProductId" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <button class="home-card__button" type="submit">Add to Cart</button>
+                    </form>
+                </article>
+            }
+        </div>
+    }
+</section>

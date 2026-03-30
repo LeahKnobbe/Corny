@@ -1,11 +1,7 @@
 ﻿using DataAccessLayer.Entities;
 using DataAccessLayer.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BuissnessLogicLayer
 {
@@ -24,7 +20,6 @@ namespace BuissnessLogicLayer
 
         public async Task<UserModel> CreateUserAsync(UserModel user)
         {
-            // Hash the password before storing
             user.Password = HashPassword(user.Password);
             return await userRepository.CreateUserAsync(user);
         }
@@ -32,6 +27,18 @@ namespace BuissnessLogicLayer
         public async Task<bool> EmailExistsAsync(string email)
         {
             return await userRepository.EmailExistsAsync(email);
+        }
+
+        public async Task<UserModel?> AuthenticateAsync(string email, string password)
+        {
+            var user = await userRepository.GetByEmailAsync(email);
+            if (user == null)
+            {
+                return null;
+            }
+
+            var hashedInput = HashPassword(password);
+            return user.Password == hashedInput ? user : null;
         }
 
         private string HashPassword(string password)
@@ -42,5 +49,38 @@ namespace BuissnessLogicLayer
                 return Convert.ToBase64String(hashedBytes);
             }
         }
+
+        public async Task<UserModel?> GetUserByIdAsync(int id)
+        {
+            return await userRepository.GetUserByIdAsync(id);
+        }
+
+        public async Task<bool> UpdateUserAsync(UserModel user)
+        {
+            var existingUser = await userRepository.GetUserByIdAsync(user.UserId);
+            if (existingUser == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(user.Password))
+            {
+                user.Password = existingUser.Password;
+            }
+            else
+            {
+                user.Password = HashPassword(user.Password);
+            }
+
+            return await userRepository.UpdateUserAsync(user);
+        }
+
+
+        public async Task<bool> DeleteUserAsync(int id)
+        {
+            return await userRepository.DeleteUserAsync(id);
+        }
+
+      
     }
 }

@@ -1,0 +1,258 @@
+@model CORNY.Models.ViewModels.CartViewModel
+
+@{
+    ViewData["Title"] = "Cart";
+    var itemCount = Model?.Items?.Count ?? 0;
+    var hasItems = itemCount > 0;
+}
+
+<section class="cart-page">
+    <header class="cart-header">
+        <h1 class="cart-title">Cart <span class="cart-title__count">(@itemCount item@(itemCount == 1 ? "" : "s"))</span></h1>
+    </header>
+
+    <div class="cart-shell">
+        <!-- LEFT COLUMN -->
+        <div class="cart-main">
+            <h2 class="cart-subtitle">Pickup and delivery options</h2>
+
+            <div class="cart-options" role="group" aria-label="Pickup and delivery options">
+                <button type="button"
+                        class="cart-option"
+                        data-fulfillment="pickup"
+                        aria-pressed="false"
+                        @(hasItems ? "" : "disabled")>
+                    <div class="cart-option__iconWrap">
+                        <img class="cart-option__icon" src="~/images/cart/PickUpGreen.png" alt="" aria-hidden="true" />
+                    </div>
+                    <div class="cart-option__text">
+                        <div class="cart-option__name">Pick up</div>
+                        <div class="cart-option__status">Available</div>
+                    </div>
+                </button>
+
+                <button type="button"
+                        class="cart-option"
+                        data-fulfillment="delivery"
+                        aria-pressed="false"
+                        @(hasItems ? "" : "disabled")>
+                    <div class="cart-option__iconWrap">
+                        <img class="cart-option__icon" src="~/images/cart/DeliveryGreen.png" alt="" aria-hidden="true" />
+                    </div>
+                    <div class="cart-option__text">
+                        <div class="cart-option__name">Delivery</div>
+                        <div class="cart-option__status">Available</div>
+                    </div>
+                </button>
+            </div>
+
+            <section class="cart-items">
+                <div class="cart-items__banner">
+                    Pickup or delivery, as soon as tomorrow
+                </div>
+
+                @if (!hasItems)
+                {
+                    <div class="cart-empty">
+                        <p class="text-muted mb-0">Your cart is empty.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="cart-items__card">
+                        @foreach (var item in Model.Items)
+                        {
+                            var product = item.Product;
+                            var unitPrice = product.Pricing;
+                            var unitLabel = !string.IsNullOrWhiteSpace(product.Sizing) ? product.Sizing : "Each";
+
+                            <article class="cart-item">
+                                <div class="cart-item__image">
+                                    <img src="@(string.IsNullOrWhiteSpace(item.ImageUrl)
+                                                                                         ? "https://via.placeholder.com/96?text=Item"
+                                                                                         : item.ImageUrl)"
+                                 alt="@product.Name"
+                                 onerror="this.onerror=null;this.src='https://via.placeholder.com/96?text=Item';" />
+                        </div>
+
+                                <div class="cart-item__info">
+                                    <div class="cart-item__name">
+                                        <a class="cart-item__nameLink"
+                                           asp-controller="Product"
+                                           asp-action="Details"
+                                           asp-route-id="@product.ProductId">
+                                            @product.Name
+                                        </a>
+                                        <span class="cart-item__meta">, @unitLabel</span>
+                                    </div>
+
+                                    <form asp-action="Remove" method="post" class="cart-item__remove">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@product.ProductId" />
+                                        <button type="submit" class="cart-link">Remove</button>
+                                    </form>
+                                </div>
+
+                                <div class="cart-item__right">
+                                    <div class="cart-item__price">$@unitPrice.ToString("0.00")</div>
+
+                                    <form asp-action="Update" method="post" class="cart-qty">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@product.ProductId" />
+
+                                        <button class="cart-qty__btn" type="button" data-step="-1" aria-label="Decrease quantity">-</button>
+                                        <input class="cart-qty__input" type="number" name="quantity" value="@item.Quantity" min="1" aria-label="Quantity" />
+                                        <button class="cart-qty__btn" type="button" data-step="1" aria-label="Increase quantity">+</button>
+
+                                        <button class="cart-qty__update" type="submit">Update</button>
+                                    </form>
+                                </div>
+                            </article>
+                                        }
+                    </div>
+                }
+            </section>
+        </div>
+
+        <!-- RIGHT COLUMN: Summary -->
+        <aside class="cart-summary" aria-label="Order summary">
+            <div class="cart-summary__card">
+                <button id="cartContinueBtn" class="cart-summary__cta" type="button" disabled>
+                    Continue
+                </button>
+
+                <div class="cart-summary__row cart-summary__row--top">
+                    <div class="cart-summary__label">
+                        Subtotal <span class="cart-summary__muted">(@itemCount item@(itemCount == 1 ? "" : "s"))</span>
+                    </div>
+                    <div class="cart-summary__value" id="cartSubtotal">$@Model.Total.ToString("0.00")</div>
+                </div>
+
+                <div class="cart-summary__row">
+                    <div class="cart-summary__muted">
+                        Select delivery or pickup to view fees
+                    </div>
+                    <span id="cartFeeSelectText" class="cart-link cart-link--disabled">Select</span>
+                </div>
+
+                <div class="cart-summary__row cart-summary__row--fees">
+                    <div class="cart-summary__label">Estimated fees</div>
+                    <div class="cart-summary__muted" id="cartFees">$0.00</div>
+                </div>
+
+                <hr class="cart-summary__hr" />
+
+                <div class="cart-summary__row">
+                    <div class="cart-summary__label">Taxes</div>
+                    <div class="cart-summary__muted">Calculated later</div>
+                </div>
+
+                <hr class="cart-summary__hr" />
+
+                <div class="cart-summary__row cart-summary__row--total">
+                    <div class="cart-summary__label">Estimated total</div>
+                    <div class="cart-summary__value" id="cartEstimatedTotal">$@Model.Total.ToString("0.00")</div>
+                </div>
+
+                <div id="cartFulfillmentChosen" class="cart-summary__note" aria-live="polite"></div>
+            </div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            var hasItems = @hasItems.ToString().ToLowerInvariant();
+
+            // Quantity stepper: update number field, then auto-submit update form
+            var qtyForms = document.querySelectorAll('.cart-qty');
+            qtyForms.forEach(function (form) {
+                var input = form.querySelector('.cart-qty__input');
+                var minus = form.querySelector('[data-step="-1"]');
+                var plus = form.querySelector('[data-step="1"]');
+
+                function clamp(v) {
+                    v = parseInt(v, 10);
+                    if (isNaN(v) || v < 1) return 1;
+                    return v;
+                }
+
+                function step(delta) {
+                    input.value = clamp(input.value) + delta;
+                    if (parseInt(input.value, 10) < 1) input.value = 1;
+                    form.submit();
+                }
+
+                if (minus) minus.addEventListener('click', function () { step(-1); });
+                if (plus) plus.addEventListener('click', function () { step(1); });
+            });
+
+            if (!hasItems) {
+                return;
+            }
+
+            // Fees + Continue gating
+            var optionButtons = Array.prototype.slice.call(document.querySelectorAll('.cart-option[data-fulfillment]'));
+            var continueBtn = document.getElementById('cartContinueBtn');
+            var selectText = document.getElementById('cartFeeSelectText');
+            var chosen = document.getElementById('cartFulfillmentChosen');
+
+            var feesEl = document.getElementById('cartFees');
+            var estTotalEl = document.getElementById('cartEstimatedTotal');
+
+            // Subtotal numeric from server
+            var subtotal = @Model.Total;
+
+            function money(n) {
+                return '$' + (Math.round(n * 100) / 100).toFixed(2);
+            }
+
+            function clearSelected() {
+                optionButtons.forEach(function (b) {
+                    b.classList.remove('cart-option--selected');
+                    b.setAttribute('aria-pressed', 'false');
+                });
+            }
+
+            function setFeesFor(fulfillment) {
+                var fee = 0;
+                if (fulfillment === 'delivery') fee = 5.99;
+                if (fulfillment === 'pickup') fee = 0;
+
+                if (feesEl) feesEl.textContent = money(fee);
+                if (estTotalEl) estTotalEl.textContent = money(subtotal + fee);
+            }
+
+            function setSelected(btn) {
+                clearSelected();
+                btn.classList.add('cart-option--selected');
+                btn.setAttribute('aria-pressed', 'true');
+
+                if (continueBtn) continueBtn.disabled = false;
+                if (selectText) {
+                    selectText.classList.remove('cart-link--disabled');
+                    selectText.textContent = 'Selected';
+                }
+                if (chosen) {
+                    var label = btn.getAttribute('data-fulfillment') === 'pickup' ? 'Pick up selected' : 'Delivery selected';
+                    chosen.textContent = label;
+                }
+
+                setFeesFor(btn.getAttribute('data-fulfillment'));
+            }
+
+            optionButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    setSelected(btn);
+                });
+            });
+
+            if (continueBtn) {
+                continueBtn.addEventListener('click', function () {
+                    alert('Checkout is not implemented yet.');
+                });
+            }
+        })();
+    </script>
+}
