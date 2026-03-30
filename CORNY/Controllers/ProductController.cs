@@ -36,6 +36,58 @@ namespace CORNY.Controllers
             return View(fruits);
         }
 
+        // DB-backed Vegetables page
+        [HttpGet]
+        [Route("Produce/Vegetables")]
+        public async Task<IActionResult> Vegetables()
+        {
+            var products = await productService.GetProductsAsync();
+            var vegetables = products
+                .Where(product => product.CategoryId == 2 && product.IsForSale)
+                .ToList();
+
+            return View(vegetables);
+        }
+
+        // DB-backed meat page
+        [HttpGet]
+        [Route("Meat")]
+        public async Task<IActionResult> Meat()
+        {
+            var products = await productService.GetProductsAsync();
+            var meats = products
+                .Where(product => product.CategoryId == 3 && product.IsForSale)
+                .ToList();
+
+            return View(meats);
+        }
+
+        // DB-backed animal products page
+        [HttpGet]
+        [Route("AnimalProduct")]
+        public async Task<IActionResult> AnimalProduct()
+        {
+            var products = await productService.GetProductsAsync();
+            var animalproducts = products
+                .Where(product => product.CategoryId == 4 && product.IsForSale)
+                .ToList();
+
+            return View(animalproducts);
+        }
+
+        // DB-backed produces page
+        [HttpGet]
+        [Route("Produce")]
+        public async Task<IActionResult> Produce()
+        {
+            var products = await productService.GetProductsAsync();
+            var produce = products
+                .Where(product => (product.CategoryId == 1 || product.CategoryId == 2) && product.IsForSale)
+                .ToList();
+
+            return View(produce);
+        }
+
         // Hardcoded demo page (easy delete later)
         [HttpGet]
         [Route("Produce/FruitCoded")]
@@ -122,6 +174,25 @@ namespace CORNY.Controllers
                 return NotFound();
             }
 
+            var images = await productService.GetProductImagesAsync(id);
+            var existingImages = new List<ProductImageItemViewModel>();
+
+            if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+            {
+                existingImages.Add(new ProductImageItemViewModel
+                {
+                    ImageUrl = product.ImageUrl,
+                    IsPrimary = true
+                });
+            }
+
+            existingImages.AddRange(images.Select(image => new ProductImageItemViewModel
+            {
+                ProductImageId = image.ProductImageId,
+                ImageUrl = image.ImageUrl,
+                IsPrimary = false
+            }));
+
             var model = new ProductFormViewModel
             {
                 ProductId = product.ProductId,
@@ -133,7 +204,8 @@ namespace CORNY.Controllers
                 Pricing = product.Pricing,
                 FarmId = product.FarmId,
                 CategoryId = product.CategoryId,
-                ImageUrl = product.ImageUrl
+                ImageUrl = product.ImageUrl,
+                ExistingImages = existingImages
             };
 
             return View(model);
@@ -194,6 +266,44 @@ namespace CORNY.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteImage(int id, int? imageId, bool isPrimary)
+        {
+            var product = await productService.GetProductByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            string? imageUrl = null;
+
+            if (isPrimary)
+            {
+                imageUrl = product.ImageUrl;
+                if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                {
+                    product.ImageUrl = null;
+                    await productService.UpdateProductAsync(product);
+                }
+            }
+            else if (imageId.HasValue)
+            {
+                var image = await productService.GetProductImageByIdAsync(imageId.Value);
+                if (image == null)
+                {
+                    return NotFound();
+                }
+
+                imageUrl = image.ImageUrl;
+                await productService.DeleteProductImageAsync(imageId.Value);
+            }
+
+            TryDeleteImageFile(imageUrl);
+
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var success = await productService.DeleteProductAsync(id);
@@ -204,9 +314,9 @@ namespace CORNY.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private async Task<IReadOnlyList<string>> SaveImagesAsync(IList<IFormFile> files)
+        private async Task<IReadOnlyList<string>> SaveImagesAsync(IList<IFormFile>? files)
         {
-            if (files.Count == 0)
+            if (files == null || files.Count == 0)
             {
                 return Array.Empty<string>();
             }
@@ -229,6 +339,27 @@ namespace CORNY.Controllers
             }
 
             return savedUrls;
+        }
+
+        private void TryDeleteImageFile(string? imageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return;
+            }
+
+            if (!imageUrl.StartsWith("/images/products/", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var relativePath = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            var filePath = Path.Combine(webHostEnvironment.WebRootPath, relativePath);
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
         }
     }
 }

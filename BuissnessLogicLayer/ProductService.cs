@@ -23,7 +23,7 @@ namespace BuissnessLogicLayer
             productDbContext.Products.Add(product);
             await productDbContext.SaveChangesAsync();
             return product;
-        }   
+        }
 
         public async Task<ProductModel?> GetProductByIdAsync(int id)
         {
@@ -51,6 +51,11 @@ namespace BuissnessLogicLayer
                 .ToListAsync();
         }
 
+        public async Task<ProductImageModel?> GetProductImageByIdAsync(int productImageId)
+        {
+            return await productDbContext.ProductImages.FindAsync(productImageId);
+        }
+
         public async Task AddProductImagesAsync(int productId, IReadOnlyList<string> imageUrls)
         {
             if (imageUrls.Count == 0)
@@ -72,6 +77,19 @@ namespace BuissnessLogicLayer
 
             productDbContext.ProductImages.AddRange(newImages);
             await productDbContext.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteProductImageAsync(int productImageId)
+        {
+            var image = await productDbContext.ProductImages.FindAsync(productImageId);
+            if (image == null)
+            {
+                return false;
+            }
+
+            productDbContext.ProductImages.Remove(image);
+            await productDbContext.SaveChangesAsync();
+            return true;
         }
 
         public async Task<bool> UpdateProductAsync(ProductModel product)

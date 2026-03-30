@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace CORNY.Models.ViewModels
 {
@@ -24,6 +25,7 @@ namespace CORNY.Models.ViewModels
 
         public string? ImageUrl { get; set; }
 
-        public IList<IFormFile> ImageFiles { get; set; } = new List<IFormFile>();
+        [ValidateNever]
+        public IList<IFormFile>? ImageFiles { get; set; }
     }
 }

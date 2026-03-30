@@ -1,54 +1,52 @@
-﻿﻿@using System
+﻿@using System
 @using System.Linq
 @model IEnumerable<DataAccessLayer.Entities.ProductModel>
 
 @{
-    ViewData["Title"] = "Fruit";
+    ViewData["Title"] = "Meat";
 }
 
 <section class="fruit-page">
     <nav class="fruit-breadcrumb" aria-label="Breadcrumb">
         <a asp-controller="Home" asp-action="Index">Home</a>
         <span class="fruit-breadcrumb__sep">&gt;</span>
-        <a asp-controller="Product" asp-action="Produce">Produce</a>
-        <span class="fruit-breadcrumb__sep">&gt;</span>
-        <span class="fruit-breadcrumb__current">Fruit</span>
+        <span class="fruit-breadcrumb__current">Meat</span>
     </nav>
 
-    <h1 class="fruit-title">Fruit</h1>
+    <h1 class="fruit-title">Meat</h1>
 
     @if (!Model.Any())
     {
-        <p class="text-muted">No fruit products are available yet.</p>
+        <p class="text-muted">No meat products are available yet.</p>
     }
     else
     {
         <div class="fruit-grid">
-            @foreach (var fruit in Model)
+            @foreach (var meat in Model)
             {
-                var imageUrl = string.IsNullOrWhiteSpace(fruit.ImageUrl)
-                ? $"https://via.placeholder.com/240x180?text={Uri.EscapeDataString(fruit.Name)}"
-                : fruit.ImageUrl;
+                var imageUrl = string.IsNullOrWhiteSpace(meat.ImageUrl)
+                    ? $"https://via.placeholder.com/240x180?text={Uri.EscapeDataString(meat.Name)}"
+                    : meat.ImageUrl;
 
                 <article class="fruit-card">
                     <a class="fruit-card-link"
                        asp-controller="Product"
                        asp-action="Details"
-                       asp-route-id="@fruit.ProductId">
+                       asp-route-id="@meat.ProductId">
                         <img class="fruit-card__image"
                              src="@imageUrl"
-                             alt="@fruit.Name" />
+                             alt="@meat.Name" />
 
                         <div class="fruit-card__body">
-                            <h2 class="fruit-card__name">@fruit.Name</h2>
-                            <div class="fruit-card__price">$@fruit.Pricing.ToString("0.00")</div>
+                            <h2 class="fruit-card__name">@meat.Name</h2>
+                            <div class="fruit-card__price">$@meat.Pricing.ToString("0.00")</div>
                             <div class="fruit-card__rating">★★★★★</div>
                         </div>
                     </a>
 
                     <form asp-controller="Cart" asp-action="Add" method="post" class="fruit-card__form">
                         @Html.AntiForgeryToken()
-                        <input type="hidden" name="productId" value="@fruit.ProductId" />
+                        <input type="hidden" name="productId" value="@meat.ProductId" />
                         <input type="hidden" name="quantity" value="1" />
                         <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
                         <button class="fruit-card__button" type="submit">Add to Cart</button>

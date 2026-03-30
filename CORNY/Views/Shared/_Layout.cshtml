@@ -25,11 +25,12 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="produceDropdown">
                                 <li><a class="dropdown-item" href="/Produce/Fruit">Fruit</a></li>
-                                <li><a class="dropdown-item" href="/Produce/FruitCoded">Fruit (Coded)</a></li>
+                                <li><a class="dropdown-item" href="/Produce/Vegetables">Vegetable</a></li>
+                                
                             </ul>
                         </li>
-                        <li><a class="corny-link" href="#">Meat</a></li>
-                        <li><a class="corny-link" href="#">Animal Product</a></li>
+                        <li><a class="corny-link" href="/Meat">Meat</a></li>
+                        <li><a class="corny-link" href="/AnimalProduct">Animal Product</a></li>
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("1"))
                         {
                             <li class="dropdown">
