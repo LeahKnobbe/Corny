@@ -27,5 +27,7 @@ namespace CORNY.Models.ViewModels
 
         [ValidateNever]
         public IList<IFormFile>? ImageFiles { get; set; }
+
+        public IList<ProductImageItemViewModel> ExistingImages { get; set; } = new List<ProductImageItemViewModel>();
     }
 }
