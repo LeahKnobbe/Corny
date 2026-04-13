@@ -11,11 +11,13 @@ namespace CORNY.Controllers
     {
         private readonly ICartService cartService;
         private readonly IProductService productService;
+        private readonly IUserService userService;
 
-        public CartController(ICartService cartService, IProductService productService)
+        public CartController(ICartService cartService, IProductService productService, IUserService userService)
         {
             this.cartService = cartService;
             this.productService = productService;
+            this.userService = userService;
         }
 
         [HttpGet]
@@ -34,6 +36,44 @@ namespace CORNY.Controllers
 
             var viewModel = new CartViewModel
             {
+                Items = cartItems
+                    .Where(item => productLookup.ContainsKey(item.ProductId))
+                    .Select(item => new CartItemViewModel
+                    {
+                        Product = productLookup[item.ProductId],
+                        Quantity = item.Quantity,
+                        ImageUrl = productLookup[item.ProductId].ImageUrl
+                    })
+                    .ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Checkout()
+        {
+            var userId = GetUserId();
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            var cartItems = await cartService.GetCartItemsAsync(userId.Value);
+            if (!cartItems.Any())
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var products = await productService.GetProductsByIdsAsync(cartItems.Select(item => item.ProductId));
+            var productLookup = products.ToDictionary(product => product.ProductId);
+
+            var user = await userService.GetUserByIdAsync(userId.Value);
+            var fullName = user != null ? $"{user.FirstName} {user.LastName}" : "Customer";
+
+            var viewModel = new CheckoutViewModel
+            {
+                UserFullName = fullName,
                 Items = cartItems
                     .Where(item => productLookup.ContainsKey(item.ProductId))
                     .Select(item => new CartItemViewModel

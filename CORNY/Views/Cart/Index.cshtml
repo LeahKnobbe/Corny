@@ -69,8 +69,8 @@
                             <article class="cart-item">
                                 <div class="cart-item__image">
                                     <img src="@(string.IsNullOrWhiteSpace(item.ImageUrl)
-                                                                                         ? "https://via.placeholder.com/96?text=Item"
-                                                                                         : item.ImageUrl)"
+                                                                                                                                  ? "https://via.placeholder.com/96?text=Item"
+                                                                                                                                  : item.ImageUrl)"
                                  alt="@product.Name"
                                  onerror="this.onerror=null;this.src='https://via.placeholder.com/96?text=Item';" />
                         </div>
@@ -165,7 +165,6 @@
         (function () {
             var hasItems = @hasItems.ToString().ToLowerInvariant();
 
-            // Quantity stepper: update number field, then auto-submit update form
             var qtyForms = document.querySelectorAll('.cart-qty');
             qtyForms.forEach(function (form) {
                 var input = form.querySelector('.cart-qty__input');
@@ -192,7 +191,6 @@
                 return;
             }
 
-            // Fees + Continue gating
             var optionButtons = Array.prototype.slice.call(document.querySelectorAll('.cart-option[data-fulfillment]'));
             var continueBtn = document.getElementById('cartContinueBtn');
             var selectText = document.getElementById('cartFeeSelectText');
@@ -201,7 +199,6 @@
             var feesEl = document.getElementById('cartFees');
             var estTotalEl = document.getElementById('cartEstimatedTotal');
 
-            // Subtotal numeric from server
             var subtotal = @Model.Total;
 
             function money(n) {
@@ -250,7 +247,7 @@
 
             if (continueBtn) {
                 continueBtn.addEventListener('click', function () {
-                    alert('Checkout is not implemented yet.');
+                    window.location.href = '@Url.Action("Checkout", "Cart")';
                 });
             }
         })();
