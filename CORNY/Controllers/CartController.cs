@@ -12,12 +12,14 @@ namespace CORNY.Controllers
         private readonly ICartService cartService;
         private readonly IProductService productService;
         private readonly IUserService userService;
+        private readonly IOrderService orderService;
 
-        public CartController(ICartService cartService, IProductService productService, IUserService userService)
+        public CartController(ICartService cartService, IProductService productService, IUserService userService, IOrderService orderService)
         {
             this.cartService = cartService;
             this.productService = productService;
             this.userService = userService;
+            this.orderService = orderService;
         }
 
         [HttpGet]
@@ -143,6 +145,26 @@ namespace CORNY.Controllers
             }
 
             await cartService.RemoveFromCartAsync(userId.Value, productId);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PlaceOrder(string? shippingAddress)
+        {
+            var userId = GetUserId();
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            var orderId = await orderService.PlaceOrderAsync(userId.Value, shippingAddress);
+            if (orderId == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["CartMessage"] = "Order placed.";
             return RedirectToAction(nameof(Index));
         }
 

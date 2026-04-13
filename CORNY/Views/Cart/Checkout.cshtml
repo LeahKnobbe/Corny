@@ -139,9 +139,13 @@
                     <span class="co-summary__value"><strong>$@Model.Total.ToString("0.00")</strong></span>
                 </div>
 
-                <button type="button" class="co-summary__cta" onclick="alert('Order placed! (demo only)')">
-                    Checkout
-                </button>
+                <form asp-action="PlaceOrder" method="post" id="placeOrderForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="shippingAddress" id="shippingAddressInput" value="" />
+                    <button type="submit" class="co-summary__cta">
+                        Checkout
+                    </button>
+                </form >
             </div>
         </aside>
     </div>
@@ -434,6 +438,22 @@
 
                 closeModal();
             });
+
+            var orderForm = document.getElementById('placeOrderForm');
+            var shippingInput = document.getElementById('shippingAddressInput');
+
+            function getSelectedAddressLine() {
+                var selected = document.querySelector('.co-address-card--selected');
+                if (!selected) return '';
+                var line = selected.querySelector('.co-address-card__line');
+                return line ? line.textContent.trim() : '';
+            }
+
+            if (orderForm && shippingInput) {
+                orderForm.addEventListener('submit', function () {
+                    shippingInput.value = getSelectedAddressLine();
+                });
+            }
         })();
     </script>
 }

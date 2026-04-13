@@ -10,10 +10,18 @@ namespace DataAccessLayer.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CartItemId { get; set; }
 
+        [Column("Cart_ID")]
+        public int CartId { get; set; }
+
+        public CartModel? Cart { get; set; }
+
+        [Column("UserId")]
         public int UserId { get; set; }
 
+        [Column("ProductId")]
         public int ProductId { get; set; }
 
+        [Column("Quantity")]
         public int Quantity { get; set; }
     }
 }

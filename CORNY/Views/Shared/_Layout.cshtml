@@ -40,6 +40,7 @@
                                 <ul class="dropdown-menu" aria-labelledby="adminDashboard">
                                     <li><a class="dropdown-item" href="/User/Index">User Index</a></li>
                                     <li><a class="dropdown-item" href="/Product/Index">Product Index</a></li>
+                                    <li><a class="dropdown-item" href="/Order/Index">Order Index</a></li>
                                 </ul>
                             </li>
                         }
@@ -58,6 +59,7 @@
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
                                 @if (User?.Identity?.IsAuthenticated ?? false)
                                 {
+                                    <li><a class="dropdown-item" href="/Order/MyOrders">My Orders</a></li>
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post" class="corny-dropdown-form">
                                             @Html.AntiForgeryToken()

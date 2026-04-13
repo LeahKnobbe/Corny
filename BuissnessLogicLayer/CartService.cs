@@ -1,3 +1,4 @@
+using System;
 using DataAccessLayer.Data;
 using DataAccessLayer.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -20,13 +21,16 @@ namespace BuissnessLogicLayer
                 quantity = 1;
             }
 
+            var cart = await GetOrCreateCartAsync(userId);
+
             var existingItem = await productDbContext.CartItems
-                .FirstOrDefaultAsync(item => item.UserId == userId && item.ProductId == productId);
+                .FirstOrDefaultAsync(item => item.CartId == cart.CartId && item.ProductId == productId);
 
             if (existingItem == null)
             {
                 productDbContext.CartItems.Add(new CartItemModel
                 {
+                    CartId = cart.CartId,
                     UserId = userId,
                     ProductId = productId,
                     Quantity = quantity
@@ -42,15 +46,32 @@ namespace BuissnessLogicLayer
 
         public async Task<IReadOnlyList<CartItemModel>> GetCartItemsAsync(int userId)
         {
+            var cart = await productDbContext.Carts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
+            {
+                return Array.Empty<CartItemModel>();
+            }
+
             return await productDbContext.CartItems
-                .Where(item => item.UserId == userId)
+                .Where(item => item.CartId == cart.CartId)
                 .ToListAsync();
         }
 
         public async Task UpdateQuantityAsync(int userId, int productId, int quantity)
         {
+            var cart = await productDbContext.Carts
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
+            {
+                return;
+            }
+
             var item = await productDbContext.CartItems
-                .FirstOrDefaultAsync(i => i.UserId == userId && i.ProductId == productId);
+                .FirstOrDefaultAsync(i => i.CartId == cart.CartId && i.ProductId == productId);
 
             if (item == null)
             {
@@ -71,14 +92,44 @@ namespace BuissnessLogicLayer
 
         public async Task RemoveFromCartAsync(int userId, int productId)
         {
+            var cart = await productDbContext.Carts
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
+            {
+                return;
+            }
+
             var item = await productDbContext.CartItems
-                .FirstOrDefaultAsync(i => i.UserId == userId && i.ProductId == productId);
+                .FirstOrDefaultAsync(i => i.CartId == cart.CartId && i.ProductId == productId);
 
             if (item != null)
             {
                 productDbContext.CartItems.Remove(item);
                 await productDbContext.SaveChangesAsync();
             }
+        }
+
+        private async Task<CartModel> GetOrCreateCartAsync(int userId)
+        {
+            var cart = await productDbContext.Carts
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart != null)
+            {
+                return cart;
+            }
+
+            cart = new CartModel
+            {
+                UserId = userId,
+                Status = "Open",
+                CreateDate = DateTime.UtcNow
+            };
+
+            productDbContext.Carts.Add(cart);
+            await productDbContext.SaveChangesAsync();
+            return cart;
         }
     }
 }
