@@ -47,38 +47,42 @@
                     </ul>
 
                     <div class="corny-actions">
-                        <div class="corny-search">
-                            <span class="corny-search__icon">🔍</span>
-                            <input type="search" placeholder="Search" aria-label="Search" />
-                        </div>
+    <form class="corny-search" asp-controller="Home" asp-action="Index" method="get" role="search">
+        <span class="corny-search__icon">🔍</span>
+        <input type="search"
+               name="search"
+               value="@Context.Request.Query["search"]"
+               placeholder="Search"
+               aria-label="Search" />
+    </form>
 
-                        <div class="dropdown corny-user-dropdown">
-                            <button class="corny-icon-button dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="~/images/User_Icon.png" alt="User menu" />
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
-                                @if (User?.Identity?.IsAuthenticated ?? false)
-                                {
-                                    <li><a class="dropdown-item" href="/Order/MyOrders">My Orders</a></li>
-                                    <li>
-                                        <form asp-controller="Account" asp-action="Logout" method="post" class="corny-dropdown-form">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="dropdown-item">Logout</button>
-                                        </form>
-                                    </li>
-                                }
-                                else
-                                {
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Register">Sign up</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">Login</a></li>
-                                }
-                            </ul>
-                        </div>
+    <div class="dropdown corny-user-dropdown">
+        <button class="corny-icon-button dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="~/images/User_Icon.png" alt="User menu" />
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+            @if (User?.Identity?.IsAuthenticated ?? false)
+            {
+                <li><a class="dropdown-item" href="/Order/MyOrders">My Orders</a></li>
+                <li>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="corny-dropdown-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="dropdown-item">Logout</button>
+                    </form>
+                </li>
+            }
+            else
+            {
+                <li><a class="dropdown-item" asp-controller="Account" asp-action="Register">Sign up</a></li>
+                <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">Login</a></li>
+            }
+        </ul>
+    </div>
 
-                        <a class="corny-icon-button" asp-controller="Cart" asp-action="Index" title="Cart">
-                            <img src="~/images/CartWhiteButton.png" alt="Cart" />
-                        </a>
-                    </div>
+    <a class="corny-icon-button" asp-controller="Cart" asp-action="Index" title="Cart">
+        <img src="~/images/CartWhiteButton.png" alt="Cart" />
+    </a>
+</div>
                 </div>
             </div>
         </nav>

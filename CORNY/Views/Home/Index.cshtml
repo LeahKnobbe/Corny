@@ -6,6 +6,11 @@
     ViewData["Title"] = "Home";
     ViewData["MainClass"] = "container-fluid p-0";
     ViewData["NavbarClass"] = "corny-navbar corny-navbar--transparent";
+
+    var searchTerm = ViewData["Search"] as string;
+    var title = string.IsNullOrWhiteSpace(searchTerm)
+        ? "All Products"
+        : $"Search results for \"{searchTerm}\"";
 }
 
 <section class="home-hero">
@@ -17,7 +22,7 @@
 
 <section class="home-top">
     <div class="home-top__header">
-        <h2 class="home-top__title">All Products</h2>
+        <h2 class="home-top__title">@title</h2>
     </div>
 
     @if (!Model.Any())
