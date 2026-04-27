@@ -23,8 +23,29 @@ namespace CORNY.Controllers
         public async Task<IActionResult> Index()
         {
             var orders = await orderService.GetOrdersAsync();
-            var viewModel = await BuildOrderListAsync(orders);
+            var viewModel = new OrderIndexViewModel
+            {
+                Orders = await BuildOrderListAsync(orders),
+                Summary = await BuildOrderSummaryAsync(orders)
+            };
+
             return View(viewModel);
+        }
+
+        [Authorize(Roles = "1")]
+        [HttpGet]
+        public async Task<IActionResult> Summary()
+        {
+            var orders = await orderService.GetOrdersAsync();
+            var summary = await BuildOrderSummaryAsync(orders);
+
+            return Json(new
+            {
+                totalAmount = summary.TotalAmount,
+                totalOrders = summary.TotalOrders,
+                bestSellingItem = summary.BestSellingItem,
+                bestSellingQuantity = summary.BestSellingQuantity
+            });
         }
 
         [HttpGet]
@@ -67,6 +88,33 @@ namespace CORNY.Controllers
                     PriceWhenPlaced = item.PriceWhenPlaced
                 }).ToList()
             }).ToList();
+        }
+
+        private async Task<OrderSummaryViewModel> BuildOrderSummaryAsync(IReadOnlyList<DataAccessLayer.Entities.OrderModel> orders)
+        {
+            var summary = new OrderSummaryViewModel
+            {
+                TotalOrders = orders.Count,
+                TotalAmount = orders.Sum(order => order.TotalOrderCost)
+            };
+
+            var bestSeller = orders
+                .SelectMany(order => order.OrderItems)
+                .GroupBy(item => item.ProductId)
+                .Select(group => new { ProductId = group.Key, Quantity = group.Sum(item => item.Quantity) })
+                .OrderByDescending(group => group.Quantity)
+                .FirstOrDefault();
+
+            if (bestSeller == null)
+            {
+                return summary;
+            }
+
+            var products = await productService.GetProductsByIdsAsync(new[] { bestSeller.ProductId });
+            summary.BestSellingItem = products.FirstOrDefault()?.Name ?? "Unknown";
+            summary.BestSellingQuantity = bestSeller.Quantity;
+
+            return summary;
         }
     }
 }

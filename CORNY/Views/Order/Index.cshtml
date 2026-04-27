@@ -1,4 +1,4 @@
-@model IReadOnlyList<CORNY.Models.ViewModels.OrderDisplayViewModel>
+ï»¿@model CORNY.Models.ViewModels.OrderIndexViewModel
 
 @{
     ViewData["Title"] = "Orders";
@@ -6,7 +6,48 @@
 
 <h1>Orders</h1>
 
-@if (Model.Count == 0)
+<section id="order-summary" class="mb-4" data-summary-url="@Url.Action("Summary", "Order")">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted">Total revenue</div>
+                    <div class="fs-4 fw-semibold" id="summary-total-amount">
+                        $@Model.Summary.TotalAmount.ToString("0.00")
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted">Total orders</div>
+                    <div class="fs-4 fw-semibold" id="summary-total-orders">
+                        @Model.Summary.TotalOrders
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted">Best selling item</div>
+                    <div class="fs-5 fw-semibold" id="summary-best-item">
+                        @Model.Summary.BestSellingItem
+                        @if (Model.Summary.BestSellingQuantity > 0)
+                        {
+                            <span class="text-muted">(Qty @Model.Summary.BestSellingQuantity)</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (Model.Orders.Count == 0)
 {
     <p>No orders found.</p>
 }
@@ -25,7 +66,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var order in Model)
+            @foreach (var order in Model.Orders)
             {
                 <tr>
                     <td>@order.OrderId</td>
@@ -45,7 +86,7 @@ else
                                 @foreach (var item in order.Items)
                                 {
                                     <li>
-                                        @item.ProductName — Qty @item.Quantity — $@item.PriceWhenPlaced.ToString("0.00")
+                                        @item.ProductName ï¿½ Qty @item.Quantity ï¿½ $@item.PriceWhenPlaced.ToString("0.00")
                                     </li>
                                 }
                             </ul>
@@ -55,4 +96,42 @@ else
             }
         </tbody>
     </table>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var host = document.getElementById('order-summary');
+            if (!host) return;
+
+            var url = host.getAttribute('data-summary-url');
+            var totalAmount = document.getElementById('summary-total-amount');
+            var totalOrders = document.getElementById('summary-total-orders');
+            var bestItem = document.getElementById('summary-best-item');
+            var money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+            function update() {
+                fetch(url, { headers: { 'Accept': 'application/json' } })
+                    .then(function (response) { return response.ok ? response.json() : null; })
+                    .then(function (data) {
+                        if (!data) return;
+
+                        if (totalAmount) totalAmount.textContent = money.format(data.totalAmount);
+                        if (totalOrders) totalOrders.textContent = data.totalOrders;
+
+                        if (bestItem) {
+                            var text = data.bestSellingItem || 'None';
+                            if (data.bestSellingQuantity > 0) {
+                                text += ' (Qty ' + data.bestSellingQuantity + ')';
+                            }
+                            bestItem.textContent = text;
+                        }
+                    })
+                    .catch(function () { });
+            }
+
+            update();
+            window.setInterval(update, 10000);
+        })();
+    </script>
 }
