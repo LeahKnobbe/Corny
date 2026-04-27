@@ -1,9 +1,10 @@
-﻿﻿@using System
+﻿@using System
 @using System.Linq
 @model IEnumerable<DataAccessLayer.Entities.ProductModel>
 
 @{
     ViewData["Title"] = "Fruit";
+    var currentSort = Context.Request.Query["sort"].ToString();
 }
 
 <section class="fruit-page">
@@ -15,7 +16,23 @@
         <span class="fruit-breadcrumb__current">Fruit</span>
     </nav>
 
-    <h1 class="fruit-title">Fruit</h1>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 fruit-page__header">
+        <h1 class="fruit-title mb-0">Fruit</h1>
+
+        <form asp-controller="Product" asp-action="Fruit" method="get">
+            <label class="me-2" for="fruitSort">Sort</label>
+            <select id="fruitSort" name="sort" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                <option value="" selected="@(string.IsNullOrWhiteSpace(currentSort))">Default</option>
+                <option value="price_asc" selected="@(currentSort == "price_asc")">Price: Low to High</option>
+                <option value="price_desc" selected="@(currentSort == "price_desc")">Price: High to Low</option>
+                <option value="name_asc" selected="@(currentSort == "name_asc")">Name: A-Z</option>
+                <option value="name_desc" selected="@(currentSort == "name_desc")">Name: Z-A</option>
+            </select>
+            <noscript>
+                <button type="submit" class="btn btn-sm btn-outline-secondary ms-2">Apply</button>
+            </noscript>
+        </form>
+    </div>
 
     @if (!Model.Any())
     {

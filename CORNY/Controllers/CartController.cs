@@ -105,12 +105,40 @@ namespace CORNY.Controllers
                 quantity = 1;
             }
 
+            var product = await productService.GetProductByIdAsync(productId);
+            if (product == null || product.InventoryQuantity <= 0)
+            {
+                TempData["CartMessage"] = "This item is currently out of stock.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var cartItems = await cartService.GetCartItemsAsync(userId.Value);
+            var existingQuantity = cartItems
+                .Where(item => item.ProductId == productId)
+                .Select(item => item.Quantity)
+                .FirstOrDefault();
+
+            var available = product.InventoryQuantity;
+            var remaining = Math.Max(0, available - existingQuantity);
+
+            if (remaining <= 0)
+            {
+                TempData["CartMessage"] = $"{product.Name} is already at the maximum available quantity.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (quantity > remaining)
+            {
+                quantity = remaining;
+                TempData["CartMessage"] = $"Only {available} of {product.Name} are available. Cart updated to max.";
+            }
+
             await cartService.AddToCartAsync(userId.Value, productId, quantity);
 
-            var product = await productService.GetProductByIdAsync(productId);
-            TempData["CartMessage"] = product == null
-                ? "Item added to cart."
-                : $"{product.Name} added to cart.";
+            if (TempData["CartMessage"] == null)
+            {
+                TempData["CartMessage"] = $"{product.Name} added to cart.";
+            }
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
@@ -128,6 +156,20 @@ namespace CORNY.Controllers
             if (userId == null)
             {
                 return Challenge();
+            }
+
+            var product = await productService.GetProductByIdAsync(productId);
+            if (product == null || product.InventoryQuantity <= 0)
+            {
+                await cartService.UpdateQuantityAsync(userId.Value, productId, 0);
+                TempData["CartMessage"] = "This item is currently out of stock.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (quantity > product.InventoryQuantity)
+            {
+                quantity = product.InventoryQuantity;
+                TempData["CartMessage"] = $"Only {product.InventoryQuantity} of {product.Name} are available. Cart updated to max.";
             }
 
             await cartService.UpdateQuantityAsync(userId.Value, productId, quantity);

@@ -41,6 +41,10 @@ body {
     padding: 1.5rem 0 2rem;
 }
 
+.fruit-page__header {
+    margin-bottom: 1.25rem;
+}
+
 .fruit-breadcrumb {
     color: #6c757d;
     font-size: 0.95rem;

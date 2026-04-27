@@ -4,6 +4,7 @@
 
 @{
     ViewData["Title"] = "Animal Products";
+    var currentSort = Context.Request.Query["sort"].ToString();
 }
 
 <section class="fruit-page">
@@ -13,7 +14,23 @@
         <span class="fruit-breadcrumb__current">Animal Products</span>
     </nav>
 
-    <h1 class="fruit-title">Animal Products</h1>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 fruit-page__header">
+        <h1 class="fruit-title mb-0">Animal Products</h1>
+
+        <form asp-controller="Product" asp-action="AnimalProduct" method="get">
+            <label class="me-2" for="animalSort">Sort</label>
+            <select id="animalSort" name="sort" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                <option value="" selected="@(string.IsNullOrWhiteSpace(currentSort))">Default</option>
+                <option value="price_asc" selected="@(currentSort == "price_asc")">Price: Low to High</option>
+                <option value="price_desc" selected="@(currentSort == "price_desc")">Price: High to Low</option>
+                <option value="name_asc" selected="@(currentSort == "name_asc")">Name: A-Z</option>
+                <option value="name_desc" selected="@(currentSort == "name_desc")">Name: Z-A</option>
+            </select>
+            <noscript>
+                <button type="submit" class="btn btn-sm btn-outline-secondary ms-2">Apply</button>
+            </noscript>
+        </form>
+    </div>
 
     @if (!Model.Any())
     {

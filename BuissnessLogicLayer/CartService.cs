@@ -21,10 +21,27 @@ namespace BuissnessLogicLayer
                 quantity = 1;
             }
 
+            var product = await productDbContext.Products
+                .FirstOrDefaultAsync(item => item.ProductId == productId);
+
+            if (product == null || product.InventoryQuantity <= 0)
+            {
+                return;
+            }
+
             var cart = await GetOrCreateCartAsync(userId);
 
             var existingItem = await productDbContext.CartItems
                 .FirstOrDefaultAsync(item => item.CartId == cart.CartId && item.ProductId == productId);
+
+            var available = product.InventoryQuantity;
+            var existingQuantity = existingItem?.Quantity ?? 0;
+            var newQuantity = Math.Min(available, existingQuantity + quantity);
+
+            if (newQuantity <= 0)
+            {
+                return;
+            }
 
             if (existingItem == null)
             {
@@ -33,12 +50,12 @@ namespace BuissnessLogicLayer
                     CartId = cart.CartId,
                     UserId = userId,
                     ProductId = productId,
-                    Quantity = quantity
+                    Quantity = newQuantity
                 });
             }
             else
             {
-                existingItem.Quantity += quantity;
+                existingItem.Quantity = newQuantity;
             }
 
             await productDbContext.SaveChangesAsync();
@@ -78,13 +95,18 @@ namespace BuissnessLogicLayer
                 return;
             }
 
-            if (quantity <= 0)
+            var product = await productDbContext.Products
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+
+            var available = product?.InventoryQuantity ?? 0;
+
+            if (quantity <= 0 || available <= 0)
             {
                 productDbContext.CartItems.Remove(item);
             }
             else
             {
-                item.Quantity = quantity;
+                item.Quantity = Math.Min(quantity, available);
             }
 
             await productDbContext.SaveChangesAsync();

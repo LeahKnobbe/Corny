@@ -17,75 +17,86 @@ namespace CORNY.Controllers
             this.webHostEnvironment = webHostEnvironment;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? sort )
         {
             var products = await productService.GetProductsAsync();
-            return View(products);
+            var sorted = ApplySort(products, sort);
+            return View(sorted);
         }
 
         // DB-backed Fruit page
         [HttpGet]
         [Route("Produce/Fruit")]
-        public async Task<IActionResult> Fruit()
+        public async Task<IActionResult> Fruit(string? sort)
         {
             var products = await productService.GetProductsAsync();
             var fruits = products
-                .Where(product => product.CategoryId == 1 && product.IsForSale)
-                .ToList();
+                .Where(product => product.CategoryId == 1 && product.IsForSale);
 
-            return View(fruits);
+            var sorted = ApplySort(fruits, sort).ToList();
+            return View(sorted);
+        }
+
+        // DB-backed All Products page
+        [HttpGet]
+        [Route("Products")]
+        public async Task<IActionResult> All(string? sort)
+        {
+            var products = await productService.GetProductsAsync();
+            var sorted = ApplySort(products, sort).ToList();
+            return View(sorted);
         }
 
         // DB-backed Vegetables page
         [HttpGet]
         [Route("Produce/Vegetables")]
-        public async Task<IActionResult> Vegetables()
+        public async Task<IActionResult> Vegetables(string? sort)
         {
             var products = await productService.GetProductsAsync();
             var vegetables = products
-                .Where(product => product.CategoryId == 2 && product.IsForSale)
-                .ToList();
+                .Where(product => product.CategoryId == 2 && product.IsForSale);
 
-            return View(vegetables);
+            var sorted = ApplySort(vegetables, sort).ToList();
+            return View(sorted);
         }
 
         // DB-backed meat page
         [HttpGet]
         [Route("Meat")]
-        public async Task<IActionResult> Meat()
+        public async Task<IActionResult> Meat(string? sort)
         {
             var products = await productService.GetProductsAsync();
             var meats = products
-                .Where(product => product.CategoryId == 3 && product.IsForSale)
-                .ToList();
+                .Where(product => product.CategoryId == 3 && product.IsForSale);
 
-            return View(meats);
+            var sorted = ApplySort(meats, sort).ToList();
+            return View(sorted);
         }
 
         // DB-backed animal products page
         [HttpGet]
         [Route("AnimalProduct")]
-        public async Task<IActionResult> AnimalProduct()
+        public async Task<IActionResult> AnimalProduct(string? sort)
         {
             var products = await productService.GetProductsAsync();
             var animalproducts = products
-                .Where(product => product.CategoryId == 4 && product.IsForSale)
-                .ToList();
+                .Where(product => product.CategoryId == 4 && product.IsForSale);
 
-            return View(animalproducts);
+            var sorted = ApplySort(animalproducts, sort).ToList();
+            return View(sorted);
         }
 
         // DB-backed produces page
         [HttpGet]
         [Route("Produce")]
-        public async Task<IActionResult> Produce()
+        public async Task<IActionResult> Produce(string? sort)
         {
             var products = await productService.GetProductsAsync();
             var produce = products
-                .Where(product => (product.CategoryId == 1 || product.CategoryId == 2) && product.IsForSale)
-                .ToList();
+                .Where(product => (product.CategoryId == 1 || product.CategoryId == 2) && product.IsForSale);
 
-            return View(produce);
+            var sorted = ApplySort(produce, sort).ToList();
+            return View(sorted);
         }
 
         // Hardcoded demo page (easy delete later)
@@ -312,6 +323,18 @@ namespace CORNY.Controllers
                 return NotFound();
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        private static IEnumerable<ProductModel> ApplySort(IEnumerable<ProductModel> products, string? sort)
+        {
+            return sort switch
+            {
+                "price_asc" => products.OrderBy(product => product.Pricing),
+                "price_desc" => products.OrderByDescending(product => product.Pricing),
+                "name_asc" => products.OrderBy(product => product.Name, StringComparer.OrdinalIgnoreCase),
+                "name_desc" => products.OrderByDescending(product => product.Name, StringComparer.OrdinalIgnoreCase),
+                _ => products
+            };
         }
 
         private async Task<IReadOnlyList<string>> SaveImagesAsync(IList<IFormFile>? files)
