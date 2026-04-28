@@ -395,15 +395,62 @@ body {
         padding: 0;
     }
 
+    /* Navigation link styles - Updated for proper Home page white text */
     .corny-link {
         color: #586f54;
         font-weight: 500;
         text-decoration: none;
     }
 
-        .corny-link:hover {
-            color: #2f7d32;
-        }
+    .corny-link:hover {
+        color: #2f7d32;
+    }
+
+    /* Reset all links to default color first */
+    .corny-nav-links .corny-link:not(.active) {
+        color: #586f54 !important;
+        font-weight: 500;
+    }
+
+    /* Then apply active state */
+    .corny-nav-links .corny-link.active {
+        color: #2f7d32 !important;
+        font-weight: 600;
+    }
+
+    /* Ensure dropdown toggle active state works */
+    .corny-nav-links .dropdown .corny-link.dropdown-toggle.active {
+        color: #2f7d32 !important;
+        font-weight: 600;
+    }
+
+    /* Transparent navbar (Home page) - ALL links white, active is pastel green */
+    .corny-navbar--transparent .corny-nav-links .corny-link {
+        color: #ffffff !important;
+        font-weight: 500;
+    }
+
+    .corny-navbar--transparent .corny-nav-links .corny-link:not(.active) {
+        color: #ffffff !important;
+        font-weight: 500;
+    }
+
+    .corny-navbar--transparent .corny-nav-links .corny-link.active {
+        color: #a8d5a8 !important; /* Pastel/muted green for active Home link */
+        font-weight: 600;
+    }
+
+    .corny-navbar--transparent .corny-nav-links .corny-link:hover {
+        color: #d7f5d9 !important;
+    }
+
+    .corny-navbar--transparent .corny-nav-links .dropdown .corny-link.dropdown-toggle {
+        color: #ffffff !important;
+    }
+
+    .corny-navbar--transparent .corny-nav-links .dropdown .corny-link.dropdown-toggle.active {
+        color: #a8d5a8 !important; /* Pastel/muted green */
+    }
 
     .corny-actions {
         display: flex;
@@ -443,11 +490,18 @@ body {
         align-items: center;
         justify-content: center;
         text-decoration: none;
+        background: #ffffff;
     }
 
         .corny-icon-button img {
             width: 22px;
             height: 22px;
+        }
+
+        /* Make cart icon 40% bigger than user icon */
+        .corny-icon-button img[alt="Cart"] {
+            width: 31px;
+            height: 31px;
         }
 
     .corny-icon-form {
@@ -615,6 +669,7 @@ body {
 
         .corny-navbar--transparent .corny-icon-button {
             border-color: rgba(255, 255, 255, 0.7);
+            background: #ffffff;
         }
 
     .cart-toast {
