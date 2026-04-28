@@ -26,6 +26,11 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 
+// Recipe Suggestion Services
+builder.Services.AddScoped<IProductMatchingService, ProductMatchingService>();
+builder.Services.AddHttpClient<ISpoonacularService, SpoonacularService>();
+builder.Services.AddHttpClient<IRecipeSuggestionService, OpenAIRecipeSuggestionService>();
+
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

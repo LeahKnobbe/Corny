@@ -1,0 +1,181 @@
+﻿@using BuissnessLogicLayer.Models
+@model RecipeDetailViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="recipe-details-page">
+    <section class="rd-page container">
+        <!-- Breadcrumb -->
+        <nav class="rd-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="rd-breadcrumb__sep">&gt;</span>
+            <a asp-controller="RecipeSuggestion" asp-action="Index">Recipe Suggestions</a>
+            <span class="rd-breadcrumb__sep">&gt;</span>
+            <span class="rd-breadcrumb__current">@Model.Title</span>
+        </nav>
+
+        <!-- Recipe Header with Image -->
+        <div class="rd-hero">
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <div class="rd-hero__image-wrapper">
+                    <img src="@Model.ImageUrl" 
+                         alt="@Model.Title" 
+                         class="rd-hero__image"
+                         onerror="this.onerror=null;this.src='/images/placeholder-recipe.jpg';" />
+                </div>
+            }
+            
+            <div class="rd-hero__content">
+                <h1 class="rd-hero__title">@Model.Title</h1>
+                
+                @if (Model.Tags.Any())
+                {
+                    <div class="rd-hero__tags">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <span class="rd-hero__tag">@tag</span>
+                        }
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p class="rd-hero__description">@Model.Description</p>
+                }
+
+                <div class="rd-hero__meta">
+                    @if (Model.TimeMinutes.HasValue)
+                    {
+                        <div class="rd-meta-item">
+                            <svg class="rd-meta-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="2"/>
+                                <path d="M10 5V10L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            <span><strong>@Model.TimeMinutes min</strong></span>
+                        </div>
+                    }
+                    @if (Model.Servings.HasValue)
+                    {
+                        <div class="rd-meta-item">
+                            <svg class="rd-meta-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="2"/>
+                                <path d="M6 10C6 10 7 12 10 12C13 12 14 10 14 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="7" cy="8" r="1" fill="currentColor"/>
+                                <circle cx="13" cy="8" r="1" fill="currentColor"/>
+                            </svg>
+                            <span><strong>Serves @Model.Servings</strong></span>
+                        </div>
+                    }
+                    <div class="rd-meta-item">
+                        <svg class="rd-meta-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M10 2L12 8H18L13 12L15 18L10 14L5 18L7 12L2 8H8L10 2Z" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                        <span><strong>@Model.Difficulty</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content: Ingredients & Instructions -->
+        <div class="rd-content">
+            <!-- Ingredients Card -->
+            <div class="rd-section">
+                <div class="rd-section__header">
+                    <h2 class="rd-section__title">Ingredients</h2>
+                </div>
+                
+                @if (Model.Ingredients.Any())
+                {
+                    <u	class="rd-ingredients-list">
+                        @foreach (var ingredient in Model.Ingredients)
+                        {
+                            <li class="rd-ingredient-item @(ingredient.IsInCart ? "rd-ingredient-item--in-cart" : "")"
+                                onclick="this.classList.toggle('rd-ingredient-item--checked')">
+                                <div class="rd-ingredient-check"></div>
+                                <div class="rd-ingredient-text">
+                                    <strong>@ingredient.Amount</strong> @ingredient.Name
+                                    @if (ingredient.IsInCart)
+                                    {
+                                        <span class="rd-ingredient-badge">✓ In Cart</span>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </u>
+                }
+                else
+                {
+                    <p class="rd-empty-message">No ingredients available for this recipe.</p>
+                }
+            </div>
+
+            <!-- Instructions Card -->
+            <div class="rd-section">
+                <div class="rd-section__header">
+                    <h2 class="rd-section__title">Instructions</h2>
+                </div>
+                
+                @if (Model.Instructions.Any())
+                {
+                    <ol class="rd-instructions-list">
+                        @foreach (var step in Model.Instructions)
+                        {
+                            <li class="rd-instruction-item">
+                                <div class="rd-instruction-number">@step.StepNumber</div>
+                                <p class="rd-instruction-text">@step.Instruction</p>
+                            </li>
+                        }
+                    </ol>
+                }
+                else
+                {
+                    <p class="rd-empty-message">Instructions are currently unavailable for this recipe.</p>
+                }
+            </div>
+
+            <!-- Missing Ingredients Card -->
+            @if (Model.MissingDatabaseProducts.Any())
+            {
+                <div class="rd-section rd-section--highlight">
+                    <div class="rd-section__header">
+                        <h2 class="rd-section__title">🛒 Add Missing Ingredients</h2>
+                        <p class="rd-section__subtitle">These ingredients are available in our store:</p>
+                    </div>
+                    
+                    <div class="rd-products-grid">
+                        @foreach (var product in Model.MissingDatabaseProducts)
+                        {
+                            <div class="rd-product-card">
+                                <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/placeholder-product.jpg" : product.ImageUrl)" 
+                                     alt="@product.Name" 
+                                     class="rd-product-image"
+                                     onerror="this.onerror=null;this.src='/images/placeholder-product.jpg';" />
+                                <div class="rd-product-info">
+                                    <h3 class="rd-product-name">@product.Name</h3>
+                                    <p class="rd-product-price">$@product.Pricing.ToString("0.00")</p>
+                                </div>
+                                <form asp-controller="Cart" asp-action="Add" method="post" class="rd-product-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@product.ProductId" />
+                                    <input type="hidden" name="quantity" value="1" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                    <button type="submit" class="rd-product-button">Add to Cart</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Back Button -->
+        <div class="rd-footer">
+            <a asp-controller="RecipeSuggestion" asp-action="Index" class="rd-back-link">
+                ← Back to Recipe Suggestions
+            </a>
+        </div>
+    </section>
+</div>
