@@ -28,7 +28,8 @@ namespace BuissnessLogicLayer
 
         public async Task<SpoonacularRecipe[]?> SearchRecipesByIngredientsAsync(
             IReadOnlyList<string> ingredients,
-            int number = 5)
+            int number = 5,
+            int offset = 0)
         {
             if (string.IsNullOrWhiteSpace(apiKey))
             {
@@ -45,9 +46,9 @@ namespace BuissnessLogicLayer
             try
             {
                 var ingredientList = string.Join(",", ingredients);
-                var url = $"recipes/findByIngredients?ingredients={Uri.EscapeDataString(ingredientList)}&number={number}&apiKey={apiKey}&ranking=2&ignorePantry=true";
+                var url = $"recipes/findByIngredients?ingredients={Uri.EscapeDataString(ingredientList)}&number={number}&offset={offset}&apiKey={apiKey}&ranking=2&ignorePantry=true";
 
-                logger.LogInformation("Calling Spoonacular API: {Url}", url);
+                logger.LogInformation("Calling Spoonacular API: {Url}", url.Replace(apiKey, "***"));
 
                 var response = await httpClient.GetAsync(url);
 

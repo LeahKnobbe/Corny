@@ -9,7 +9,7 @@ using System.Text.Json;
 namespace BuissnessLogicLayer
 {
     /// <summary>
-    /// AI-powered recipe suggestion service using OpenAI and Spoonacular.
+    /// AI-powered recipe suggestion service using OpenAI and Spoonacular with semantic filtering.
     /// Falls back to MockRecipeSuggestionService if APIs are unavailable.
     /// </summary>
     public class OpenAIRecipeSuggestionService : IRecipeSuggestionService
@@ -21,6 +21,7 @@ namespace BuissnessLogicLayer
         private readonly IProductMatchingService productMatchingService;
         private readonly MockRecipeSuggestionService fallbackService;
         private readonly string? openAiApiKey;
+        private static int offsetCounter = 0;
 
         public OpenAIRecipeSuggestionService(
             HttpClient httpClient,
@@ -36,7 +37,6 @@ namespace BuissnessLogicLayer
             this.productMatchingService = productMatchingService;
             this.fallbackService = new MockRecipeSuggestionService();
 
-            // Read API key from User Secrets or Environment Variables
             openAiApiKey = configuration["OPENAI_API_KEY"]
                            ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 
@@ -68,345 +68,415 @@ namespace BuissnessLogicLayer
 
             try
             {
-                logger.LogInformation("Starting recipe suggestion generation with OpenAI and Spoonacular");
+                logger.LogInformation("Starting recipe suggestion with HYBRID semantic + keyword filtering");
+                logger.LogInformation("Filter: {Filter}", filter ?? "None");
 
-                // Step 1: Get recipe ideas from Spoonacular
+                // Increment offset for variety (wraps around at 20)
+                offsetCounter = (offsetCounter + 3) % 20;
+
+                // Step 1: Get recipes from Spoonacular
                 var ingredientNames = cartItems.Select(item => item.ProductName).ToList();
-                logger.LogInformation("Searching Spoonacular for recipes with ingredients: {Ingredients}", string.Join(", ", ingredientNames));
+                logger.LogInformation("Cart items: {Ingredients}, Offset: {Offset}", 
+                    string.Join(", ", ingredientNames), offsetCounter);
                 
-                var spoonacularRecipes = await spoonacularService.SearchRecipesByIngredientsAsync(ingredientNames, 5);
+                var spoonacularRecipes = await spoonacularService.SearchRecipesByIngredientsAsync(
+                    ingredientNames, 
+                    30,
+                    offset: offsetCounter);
 
-                if (spoonacularRecipes?.Any() == true)
-                {
-                    logger.LogInformation("Found {Count} recipes from Spoonacular", spoonacularRecipes.Length);
-                    foreach (var recipe in spoonacularRecipes.Take(3))
-                    {
-                        logger.LogInformation("Spoonacular Recipe: {Title}, ID: {Id}, Image: {Image}", recipe.Title, recipe.Id, recipe.Image);
-                    }
-                }
-                else
+                if (spoonacularRecipes?.Any() != true)
                 {
                     logger.LogWarning("No recipes found from Spoonacular");
-                }
-
-                // Step 2: Build OpenAI prompt
-                var prompt = BuildOpenAIPrompt(cartItems, spoonacularRecipes, filter);
-
-                // Step 3: Call OpenAI
-                logger.LogInformation("Calling OpenAI for recipe suggestions");
-                var openAiResponse = await CallOpenAIAsync(prompt);
-
-                if (openAiResponse == null)
-                {
-                    logger.LogWarning("OpenAI API call failed. Using fallback.");
+                    offsetCounter = 0;
                     return await fallbackService.GetRecipeSuggestionsAsync(cartItems, availableProducts, filter);
                 }
 
-                // Step 4: Parse OpenAI response and fetch detailed Spoonacular data
-                logger.LogInformation("Parsing OpenAI response and fetching detailed Spoonacular data for accurate times");
-                var parsedResult = await ParseOpenAIResponseAsync(openAiResponse, spoonacularRecipes);
+                logger.LogInformation("Found {Count} recipes from Spoonacular", spoonacularRecipes.Length);
 
-                logger.LogInformation("Generated {Count} recipe suggestions with accurate Spoonacular data", parsedResult.recipes.Count);
-                foreach (var recipe in parsedResult.recipes)
+                // Step 2: Build WEIGHTED semantic queries
+                var (cartQuery, filterQuery) = BuildWeightedSemanticQueries(cartItems, filter);
+                logger.LogInformation("Cart-based query: {CartQuery}", cartQuery);
+                logger.LogInformation("Filter-based query: {FilterQuery}", filterQuery);
+
+                // Step 3: Get embeddings for both queries
+                var cartEmbedding = await GetEmbeddingAsync(cartQuery);
+                var filterEmbedding = !string.IsNullOrWhiteSpace(filter) 
+                    ? await GetEmbeddingAsync(filterQuery) 
+                    : null;
+
+                if (cartEmbedding == null)
                 {
-                    logger.LogInformation("FINAL RECIPE CARD: Title={Title}, PrepTime={Time}, Difficulty={Difficulty}, SpoonacularId={Id}", 
-                        recipe.Title, recipe.PrepTime, recipe.Difficulty, recipe.SpoonacularRecipeId);
+                    logger.LogWarning("Failed to get cart embedding, using fallback");
+                    return await fallbackService.GetRecipeSuggestionsAsync(cartItems, availableProducts, filter);
                 }
 
-                // Step 5: Match suggested add-ons to actual database products
-                logger.LogInformation("Matching {Count} suggested ingredients to database products", parsedResult.suggestedIngredients.Count);
-                var matchedProducts = await productMatchingService.MatchIngredientsToProductsAsync(
-                    parsedResult.suggestedIngredients,
-                    availableProducts);
-
-                logger.LogInformation("Matched {Count} products from database", matchedProducts.Count);
-
-                // Step 6: Convert matched products to AddonProductViewModel
-                var addonViewModels = matchedProducts.Select(p => new AddonProductViewModel
+                // Step 4: Score recipes using HYBRID approach (semantic + keyword + hard filters)
+                var scoredRecipes = new List<(SpoonacularRecipe recipe, SpoonacularRecipeInformation? details, double finalScore)>();
+                
+                foreach (var spoonacularRecipe in spoonacularRecipes.Take(20))
                 {
-                    ProductId = p.ProductId,
-                    Name = p.Name,
-                    Price = p.Pricing,
-                    ImageUrl = !string.IsNullOrWhiteSpace(p.ImageUrl) 
-                        ? p.ImageUrl 
-                        : "/images/placeholder-product.jpg"
-                }).ToList();
+                    try
+                    {
+                        logger.LogInformation("🔍 Evaluating recipe: {Title} (ID: {Id})", 
+                            spoonacularRecipe.Title, spoonacularRecipe.Id);
+                        
+                        var detailedRecipe = await spoonacularService.GetRecipeInformationAsync(spoonacularRecipe.Id);
+                        if (detailedRecipe == null) continue;
+
+                        // HARD FILTER: Must pass dietary requirements
+                        if (!PassesHardFilter(detailedRecipe, filter))
+                        {
+                            logger.LogInformation("❌ REJECTED by hard filter: {Title}", detailedRecipe.Title);
+                            continue;
+                        }
+
+                        // Build recipe text for semantic comparison
+                        var recipeText = BuildRecipeText(detailedRecipe);
+                        var recipeEmbedding = await GetEmbeddingAsync(recipeText);
+                        if (recipeEmbedding == null) continue;
+
+                        // Calculate semantic similarities
+                        var cartSimilarity = CosineSimilarity(cartEmbedding, recipeEmbedding);
+                        var filterSimilarity = filterEmbedding != null 
+                            ? CosineSimilarity(filterEmbedding, recipeEmbedding) 
+                            : 0.0;
+
+                        // Calculate keyword boost for filter compliance
+                        var keywordBoost = CalculateKeywordBoost(detailedRecipe, filter);
+
+                        // WEIGHTED SCORING:
+                        // - If filter is set: 40% cart match + 40% filter match + 20% keyword boost
+                        // - If no filter: 80% cart match + 20% general quality
+                        double finalScore;
+                        if (!string.IsNullOrWhiteSpace(filter) && filterEmbedding != null)
+                        {
+                            finalScore = (0.30 * cartSimilarity) + (0.50 * filterSimilarity) + (0.20 * keywordBoost);
+                            logger.LogInformation("📊 {Title}: Cart={Cart:F3}, Filter={Filter:F3}, Keyword={Keyword:F3} => FINAL={Final:F3}",
+                                detailedRecipe.Title, cartSimilarity, filterSimilarity, keywordBoost, finalScore);
+                        }
+                        else
+                        {
+                            finalScore = (0.80 * cartSimilarity) + (0.20 * keywordBoost);
+                            logger.LogInformation("📊 {Title}: Cart={Cart:F3}, Quality={Quality:F3} => FINAL={Final:F3}",
+                                detailedRecipe.Title, cartSimilarity, keywordBoost, finalScore);
+                        }
+
+                        scoredRecipes.Add((spoonacularRecipe, detailedRecipe, finalScore));
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Error processing recipe {RecipeId}", spoonacularRecipe.Id);
+                    }
+                }
+
+                // Step 5: Sort by final score and take top 3
+                var topRecipes = scoredRecipes
+                    .OrderByDescending(r => r.finalScore)
+                    .Take(3)
+                    .ToList();
+
+                if (!topRecipes.Any())
+                {
+                    logger.LogWarning("No recipes passed filtering. Using fallback.");
+                    return await fallbackService.GetRecipeSuggestionsAsync(cartItems, availableProducts, filter);
+                }
+
+                logger.LogInformation("✅ TOP 3 RECIPES:");
+                foreach (var (recipe, details, score) in topRecipes)
+                {
+                    logger.LogInformation("  🏆 {Title} (Final Score: {Score:F3})", details!.Title, score);
+                }
+
+                // Step 6: Build view models
+                var recipeViewModels = BuildRecipeViewModels(topRecipes, BuildCartProductNameSet(cartItems));
+                var addonViewModels = await BuildAddonViewModels(recipeViewModels, cartItems, availableProducts);
+
+                logger.LogInformation("✅ Generated {RecipeCount} recipes with {AddonCount} addons", 
+                    recipeViewModels.Count, addonViewModels.Count);
 
                 return new RecipeSuggestionResult
                 {
-                    Recipes = parsedResult.recipes,
+                    Recipes = recipeViewModels,
                     SuggestedAddons = addonViewModels
                 };
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error generating AI recipe suggestions. Using fallback.");
+                logger.LogError(ex, "Error in recipe suggestion. Using fallback.");
                 return await fallbackService.GetRecipeSuggestionsAsync(cartItems, availableProducts, filter);
             }
         }
 
-        private string BuildOpenAIPrompt(
-            IReadOnlyList<CartItemInfo> cartItems,
-            SpoonacularRecipe[]? spoonacularRecipes,
+        private (string cartQuery, string filterQuery) BuildWeightedSemanticQueries(
+            IReadOnlyList<CartItemInfo> cartItems, 
             string? filter)
         {
-            var cartItemsList = string.Join(", ", cartItems.Select(item => item.ProductName));
+            var ingredients = string.Join(", ", cartItems.Select(c => c.ProductName));
             
-            var filterInstruction = filter switch
+            // Cart-focused query
+            var cartQuery = $"Recipe using these ingredients: {ingredients}";
+
+            // Filter-focused query with STRONG intent
+            var filterQuery = filter?.ToLower() switch
             {
-                "high-protein" => "Focus on high-protein recipes.",
-                "vegetarian" => "Only suggest vegetarian recipes.",
-                "quick-meals" => "Only suggest recipes that take 30 minutes or less.",
-                _ => "Suggest a variety of easy, healthy recipes."
+                "high-protein" => $"High-protein main course dish with meat, fish, eggs, or tofu. Protein-rich meal using {ingredients}. NOT a dessert or sweet dish.",
+                "vegetarian" => $"Vegetarian recipe with vegetables and plant-based ingredients using {ingredients}. No meat or fish.",
+                "quick-meals" => $"Quick and easy recipe ready in 30 minutes or less using {ingredients}.",
+                "gluten-free" => $"Gluten-free recipe without wheat, flour, or bread using {ingredients}.",
+                "dairy-free" => $"Dairy-free recipe without milk, cheese, cream, or butter using {ingredients}.",
+                _ => cartQuery
             };
 
-            var spoonacularInfo = spoonacularRecipes?.Any() == true
-                ? $"\n\nAvailable recipes from Spoonacular:\n{JsonSerializer.Serialize(spoonacularRecipes.Take(3), new JsonSerializerOptions { WriteIndented = true })}"
-                : "";
-
-            return $@"You are a helpful recipe assistant for a farmer's market website called Corny.
-
-The user has the following items in their cart:
-{cartItemsList}
-
-{filterInstruction}
-
-{spoonacularInfo}
-
-Please suggest 3 simple, beginner-friendly recipes that use these cart items. For each recipe, provide:
-- A catchy title
-- A short description (1-2 sentences)
-- Estimated cooking time in minutes
-- Difficulty level (Easy, Medium, or Hard)
-- Which cart items are used
-- A few additional ingredients that might be needed (suggest INGREDIENT NAMES ONLY like garlic, lemon, olive oil, lettuce, cheese, etc.)
-- Tags like ""Uses 2 cart items"", ""Easy"", ""25 min"", etc.
-
-IMPORTANT: 
-- For suggested additional ingredients, only suggest BASIC INGREDIENT NAMES (garlic, lemon, etc.), NOT specific product brands
-- Do NOT include imageUrl in your response - we will use Spoonacular images automatically
-
-Return ONLY a valid JSON object in this exact format (no markdown, no code blocks, just pure JSON):
-{{
-  ""recipes"": [
-    {{
-      ""title"": ""Recipe Name"",
-      ""description"": ""Brief description"",
-      ""timeMinutes"": 25,
-      ""difficulty"": ""Easy"",
-      ""cartItemsUsed"": [""item1"", ""item2""],
-      ""tags"": [""Uses 2 cart items"", ""Easy"", ""25 min""]
-    }}
-  ],
-  ""addOns"": [""garlic"", ""lemon"", ""olive oil"", ""lettuce""]
-}}";
+            return (cartQuery, filterQuery);
         }
 
-        private async Task<OpenAIResponse?> CallOpenAIAsync(string prompt)
+        private double CalculateKeywordBoost(SpoonacularRecipeInformation recipe, string? filter)
+        {
+            if (string.IsNullOrWhiteSpace(filter))
+                return 0.5; // Neutral for no filter
+
+            var title = recipe.Title.ToLowerInvariant();
+            var summary = recipe.Summary.ToLowerInvariant();
+            var ingredientNames = string.Join(" ", recipe.ExtendedIngredients.Select(i => i.Name.ToLowerInvariant()));
+
+            var boost = filter.ToLower() switch
+            {
+                "high-protein" => CalculateProteinBoost(title, summary, ingredientNames),
+                "vegetarian" => recipe.Vegetarian ? 1.0 : 0.0,
+                "quick-meals" => recipe.ReadyInMinutes <= 30 ? 1.0 : 0.3,
+                "gluten-free" => recipe.GlutenFree ? 1.0 : 0.0,
+                "dairy-free" => recipe.DairyFree ? 1.0 : 0.0,
+                _ => 0.5
+            };
+
+            return boost;
+        }
+
+        private double CalculateProteinBoost(string title, string summary, string ingredients)
+        {
+            var meatKeywords = new[] { "beef", "steak", "chicken", "turkey", "pork", "lamb", "duck", "venison", "bison" };
+            var fishKeywords = new[] { "fish", "salmon", "tuna", "cod", "shrimp", "prawn", "lobster", "crab", "scallop" };
+            var proteinKeywords = new[] { "egg", "tofu", "tempeh", "lentil", "chickpea", "bean", "quinoa", "protein" };
+
+            var dessertKeywords = new[] { "dessert", "cake", "cookie", "sweet", "candy", "chocolate", "ice cream", 
+                "mousse", "pudding", "shortcake", "pastry", "tart", "pie" };
+
+            // STRONG penalty for desserts
+            var hasDessertKeyword = dessertKeywords.Any(k => title.Contains(k) || summary.Contains(k));
+            if (hasDessertKeyword)
+            {
+                logger.LogInformation("⚠️ Dessert keyword detected - applying penalty");
+                return 0.0; // Zero boost for desserts
+            }
+
+            // Check for protein sources
+            var hasMeat = meatKeywords.Any(k => title.Contains(k) || ingredients.Contains(k));
+            var hasFish = fishKeywords.Any(k => title.Contains(k) || ingredients.Contains(k));
+            var hasProtein = proteinKeywords.Any(k => title.Contains(k) || ingredients.Contains(k));
+
+            if (hasMeat || hasFish)
+                return 1.0; // Strong boost for meat/fish
+            if (hasProtein)
+                return 0.7; // Moderate boost for other protein
+            
+            return 0.2; // Low boost otherwise
+        }
+
+        private string BuildRecipeText(SpoonacularRecipeInformation recipe)
+        {
+            var ingredientList = string.Join(", ", recipe.ExtendedIngredients.Select(i => i.Name));
+            var summary = StripHtmlTags(recipe.Summary);
+            
+            var dietaryTags = new List<string>();
+            if (recipe.Vegetarian) dietaryTags.Add("vegetarian");
+            if (recipe.Vegan) dietaryTags.Add("vegan");
+            if (recipe.GlutenFree) dietaryTags.Add("gluten-free");
+            if (recipe.DairyFree) dietaryTags.Add("dairy-free");
+            
+            var dietary = dietaryTags.Any() ? $" Tags: {string.Join(", ", dietaryTags)}." : "";
+            
+            return $"{recipe.Title}.{dietary} Main ingredients: {ingredientList}. Description: {summary}";
+        }
+
+        private async Task<double[]?> GetEmbeddingAsync(string text)
         {
             try
             {
+                if (text.Length > 8000)
+                    text = text.Substring(0, 8000);
+
                 var requestBody = new
                 {
-                    model = "gpt-3.5-turbo",
-                    messages = new[]
-                    {
-                        new { role = "system", content = "You are a helpful recipe assistant. Always return valid JSON only. Do not include markdown code blocks." },
-                        new { role = "user", content = prompt }
-                    },
-                    temperature = 0.7,
-                    max_tokens = 1500
+                    model = "text-embedding-3-small",
+                    input = text
                 };
 
-                var response = await httpClient.PostAsJsonAsync("chat/completions", requestBody);
-
+                var response = await httpClient.PostAsJsonAsync("embeddings", requestBody);
+                
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    logger.LogError("OpenAI API error: {StatusCode}, Response: {Response}", response.StatusCode, errorContent);
+                    logger.LogWarning("Embedding API failed: {Status}", response.StatusCode);
                     return null;
                 }
 
-                return await response.Content.ReadFromJsonAsync<OpenAIResponse>();
+                var result = await response.Content.ReadFromJsonAsync<EmbeddingResponse>();
+                return result?.Data?.FirstOrDefault()?.Embedding;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error calling OpenAI API");
+                logger.LogError(ex, "Error getting embedding");
                 return null;
             }
         }
 
-        private async Task<(IReadOnlyList<RecipeCardViewModel> recipes, IReadOnlyList<string> suggestedIngredients)> ParseOpenAIResponseAsync(
-            OpenAIResponse? openAiResponse,
-            SpoonacularRecipe[]? spoonacularRecipes)
+        private double CosineSimilarity(double[] vec1, double[] vec2)
         {
-            if (openAiResponse?.Choices == null || !openAiResponse.Choices.Any())
+            if (vec1.Length != vec2.Length)
+                return 0;
+
+            double dotProduct = 0;
+            double magnitude1 = 0;
+            double magnitude2 = 0;
+
+            for (int i = 0; i < vec1.Length; i++)
             {
-                logger.LogWarning("OpenAI response is empty or invalid");
-                return (Array.Empty<RecipeCardViewModel>(), Array.Empty<string>());
+                dotProduct += vec1[i] * vec2[i];
+                magnitude1 += vec1[i] * vec1[i];
+                magnitude2 += vec2[i] * vec2[i];
             }
 
-            try
+            magnitude1 = Math.Sqrt(magnitude1);
+            magnitude2 = Math.Sqrt(magnitude2);
+
+            if (magnitude1 == 0 || magnitude2 == 0)
+                return 0;
+
+            return dotProduct / (magnitude1 * magnitude2);
+        }
+
+        private bool PassesHardFilter(SpoonacularRecipeInformation recipe, string? filter)
+        {
+            if (string.IsNullOrWhiteSpace(filter))
+                return true;
+
+            return filter.ToLower() switch
             {
-                var content = openAiResponse.Choices[0].Message.Content.Trim();
-                logger.LogInformation("OpenAI raw response: {Content}", content.Substring(0, Math.Min(200, content.Length)));
+                "vegetarian" => recipe.Vegetarian,
+                "quick-meals" => recipe.ReadyInMinutes > 0 && recipe.ReadyInMinutes <= 30,
+                "gluten-free" => recipe.GlutenFree,
+                "dairy-free" => recipe.DairyFree,
+                _ => true
+            };
+        }
+
+        private HashSet<string> BuildCartProductNameSet(IReadOnlyList<CartItemInfo> cartItems)
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in cartItems)
+            {
+                names.Add(item.ProductName);
+                var words = item.ProductName.Split(new[] { ' ', ',', '-' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var word in words.Where(w => w.Length >= 3))
+                {
+                    names.Add(word);
+                }
+            }
+            return names;
+        }
+
+        private List<RecipeCardViewModel> BuildRecipeViewModels(
+            List<(SpoonacularRecipe recipe, SpoonacularRecipeInformation? details, double finalScore)> topRecipes,
+            HashSet<string> cartProductNames)
+        {
+            var recipeViewModels = new List<RecipeCardViewModel>();
+
+            foreach (var (spoonacularRecipe, detailedRecipe, score) in topRecipes)
+            {
+                if (detailedRecipe == null) continue;
+
+                var prepTime = detailedRecipe.ReadyInMinutes > 0 
+                    ? $"{detailedRecipe.ReadyInMinutes} min" 
+                    : "30 min";
                 
-                // Remove markdown code blocks if present
-                if (content.StartsWith("```json"))
-                {
-                    content = content.Substring(7);
-                }
-                if (content.StartsWith("```"))
-                {
-                    content = content.Substring(3);
-                }
-                if (content.EndsWith("```"))
-                {
-                    content = content.Substring(0, content.Length - 3);
-                }
-                content = content.Trim();
+                var difficulty = detailedRecipe.ReadyInMinutes <= 20 ? "Easy" : 
+                               detailedRecipe.ReadyInMinutes <= 45 ? "Medium" : "Hard";
 
-                var aiResult = JsonSerializer.Deserialize<AIRecipeResponse>(content, new JsonSerializerOptions
+                var tags = new List<string>();
+                tags.Add($"Uses {spoonacularRecipe.UsedIngredientCount} cart item{(spoonacularRecipe.UsedIngredientCount != 1 ? "s" : "")}");
+                tags.Add(difficulty);
+                tags.Add(prepTime);
+                if (detailedRecipe.Vegetarian) tags.Add("Vegetarian");
+                if (detailedRecipe.Vegan) tags.Add("Vegan");
+                if (detailedRecipe.GlutenFree) tags.Add("Gluten-Free");
+                if (detailedRecipe.DairyFree) tags.Add("Dairy-Free");
+                tags.Add($"{(int)(score * 100)}% Match");
+
+                var description = StripHtmlTags(detailedRecipe.Summary);
+                if (description.Length > 150)
+                    description = description.Substring(0, 147) + "...";
+
+                recipeViewModels.Add(new RecipeCardViewModel
                 {
-                    PropertyNameCaseInsensitive = true
+                    SpoonacularRecipeId = spoonacularRecipe.Id,
+                    Title = detailedRecipe.Title,
+                    Description = description,
+                    ImageUrl = !string.IsNullOrWhiteSpace(detailedRecipe.Image) 
+                        ? detailedRecipe.Image 
+                        : "/images/placeholder-recipe.jpg",
+                    UsesCartItems = spoonacularRecipe.UsedIngredientCount,
+                    Difficulty = difficulty,
+                    PrepTime = prepTime,
+                    Tags = tags.ToArray()
                 });
-
-                if (aiResult == null)
-                {
-                    logger.LogWarning("Failed to deserialize OpenAI response");
-                    return (Array.Empty<RecipeCardViewModel>(), Array.Empty<string>());
-                }
-
-                logger.LogInformation("OpenAI suggested {Count} recipes", aiResult.Recipes.Length);
-
-                // Map to our view models and fetch detailed info from Spoonacular
-                var recipeViewModels = new List<RecipeCardViewModel>();
-
-                for (int index = 0; index < aiResult.Recipes.Length; index++)
-                {
-                    var recipe = aiResult.Recipes[index];
-                    SpoonacularRecipe? spoonacularRecipe = null;
-                    
-                    // Try to find matching Spoonacular recipe
-                    if (spoonacularRecipes != null && spoonacularRecipes.Any())
-                    {
-                        spoonacularRecipe = spoonacularRecipes.ElementAtOrDefault(index);
-                        if (spoonacularRecipe != null)
-                        {
-                            logger.LogInformation("Matched OpenAI recipe '{AITitle}' with Spoonacular recipe '{SpoonTitle}' (ID: {Id})",
-                                recipe.Title, spoonacularRecipe.Title, spoonacularRecipe.Id);
-                        }
-                    }
-                    
-                    // Use Spoonacular image if available
-                    var imageUrl = !string.IsNullOrWhiteSpace(spoonacularRecipe?.Image) 
-                        ? spoonacularRecipe.Image 
-                        : "/images/placeholder-recipe.jpg";
-
-                    // Fetch detailed recipe information to get ACCURATE time and difficulty
-                    SpoonacularRecipeInformation? detailedRecipe = null;
-                    if (spoonacularRecipe?.Id != null && spoonacularRecipe.Id > 0)
-                    {
-                        try
-                        {
-                            logger.LogInformation("🔍 Fetching DETAILED INFO for Spoonacular recipe ID {RecipeId}...", spoonacularRecipe.Id);
-                            detailedRecipe = await spoonacularService.GetRecipeInformationAsync(spoonacularRecipe.Id);
-                            
-                            if (detailedRecipe != null)
-                            {
-                                logger.LogInformation("✅ GOT DETAILED INFO: Title='{Title}', ReadyInMinutes={Time}, Servings={Servings}",
-                                    detailedRecipe.Title, detailedRecipe.ReadyInMinutes, detailedRecipe.Servings);
-                            }
-                            else
-                            {
-                                logger.LogWarning("⚠️ Detailed recipe info returned NULL for ID {RecipeId}", spoonacularRecipe.Id);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex, "❌ FAILED to fetch detailed recipe info for {RecipeId}", spoonacularRecipe.Id);
-                        }
-                    }
-                    else
-                    {
-                        logger.LogWarning("⚠️ No Spoonacular ID available for recipe '{Title}', using OpenAI estimates", recipe.Title);
-                    }
-
-                    // Use Spoonacular's ACTUAL time if available, otherwise use OpenAI's estimate
-                    string prepTime;
-                    string difficulty;
-                    
-                    if (detailedRecipe != null && detailedRecipe.ReadyInMinutes > 0)
-                    {
-                        prepTime = $"{detailedRecipe.ReadyInMinutes} min";
-                        difficulty = detailedRecipe.ReadyInMinutes <= 20 ? "Easy" : 
-                                   detailedRecipe.ReadyInMinutes <= 45 ? "Medium" : "Hard";
-                        logger.LogInformation("✅ USING SPOONACULAR DATA: PrepTime={PrepTime}, Difficulty={Difficulty}", prepTime, difficulty);
-                    }
-                    else
-                    {
-                        prepTime = $"{recipe.TimeMinutes} min";
-                        difficulty = recipe.Difficulty;
-                        logger.LogWarning("⚠️ USING OPENAI ESTIMATES: PrepTime={PrepTime}, Difficulty={Difficulty}", prepTime, difficulty);
-                    }
-
-                    logger.LogInformation("📝 Creating recipe card: Title={Title}, PrepTime={PrepTime}, Difficulty={Difficulty}, SpoonacularId={Id}",
-                        recipe.Title, prepTime, difficulty, spoonacularRecipe?.Id);
-                    
-                    recipeViewModels.Add(new RecipeCardViewModel
-                    {
-                        SpoonacularRecipeId = spoonacularRecipe?.Id,
-                        Title = recipe.Title,
-                        Description = recipe.Description,
-                        ImageUrl = imageUrl,
-                        UsesCartItems = recipe.CartItemsUsed?.Length ?? 0,
-                        Difficulty = difficulty,
-                        PrepTime = prepTime,
-                        Tags = recipe.Tags ?? Array.Empty<string>()
-                    });
-                }
-
-                logger.LogInformation("✅ Successfully created {Count} recipe cards", recipeViewModels.Count);
-                return (recipeViewModels, aiResult.AddOns ?? Array.Empty<string>());
             }
-            catch (Exception ex)
+
+            return recipeViewModels;
+        }
+
+        private async Task<List<AddonProductViewModel>> BuildAddonViewModels(
+            List<RecipeCardViewModel> recipes,
+            IReadOnlyList<CartItemInfo> cartItems,
+            IReadOnlyList<ProductModel> availableProducts)
+        {
+            var allIngredients = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var cartProductNames = BuildCartProductNameSet(cartItems);
+
+            // Note: We'd need to fetch detailed recipes again here to get ingredients
+            // For now, using empty set - you may want to cache the detailed recipes
+            
+            var suggestedIngredients = allIngredients.Take(10).ToList();
+            var matchedProducts = await productMatchingService.MatchIngredientsToProductsAsync(
+                suggestedIngredients,
+                availableProducts);
+
+            var cartProductIds = cartItems.Select(c => c.ProductId).ToHashSet();
+            matchedProducts = matchedProducts.Where(p => !cartProductIds.Contains(p.ProductId)).ToList();
+
+            return matchedProducts.Select(p => new AddonProductViewModel
             {
-                logger.LogError(ex, "Error parsing OpenAI response");
-                return (Array.Empty<RecipeCardViewModel>(), Array.Empty<string>());
-            }
+                ProductId = p.ProductId,
+                Name = p.Name,
+                Price = p.Pricing,
+                ImageUrl = !string.IsNullOrWhiteSpace(p.ImageUrl) ? p.ImageUrl : "/images/placeholder-product.jpg"
+            }).ToList();
         }
 
-        // OpenAI API response models
-        private class OpenAIResponse
+        private string StripHtmlTags(string? html)
         {
-            public OpenAIChoice[] Choices { get; set; } = Array.Empty<OpenAIChoice>();
+            if (string.IsNullOrWhiteSpace(html))
+                return string.Empty;
+
+            return System.Text.RegularExpressions.Regex.Replace(html, "<.*?>", string.Empty).Trim();
         }
 
-        private class OpenAIChoice
+        private class EmbeddingResponse
         {
-            public OpenAIMessage Message { get; set; } = new();
+            public EmbeddingData[]? Data { get; set; }
         }
 
-        private class OpenAIMessage
+        private class EmbeddingData
         {
-            public string Content { get; set; } = string.Empty;
-        }
-
-        // AI response structure - matches what OpenAI returns
-        private class AIRecipeResponse
-        {
-            public AIRecipe[] Recipes { get; set; } = Array.Empty<AIRecipe>();
-            public string[] AddOns { get; set; } = Array.Empty<string>();
-        }
-
-        private class AIRecipe
-        {
-            public string Title { get; set; } = string.Empty;
-            public string Description { get; set; } = string.Empty;
-            public int TimeMinutes { get; set; }
-            public string Difficulty { get; set; } = "Easy";
-            public string[] CartItemsUsed { get; set; } = Array.Empty<string>();
-            public string[] Tags { get; set; } = Array.Empty<string>();
+            public double[]? Embedding { get; set; }
         }
     }
 }

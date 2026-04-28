@@ -43,7 +43,10 @@
                asp-action="Index" asp-route-filter="vegetarian">Vegetarian</a>
             <a class="rs-filter-chip @(Model.SelectedFilter == "quick-meals" ? "rs-filter-chip--active" : "")" 
                asp-action="Index" asp-route-filter="quick-meals">Quick Meals</a>
-            <a class="rs-filter-chip" href="#">More</a>
+            <a class="rs-filter-chip @(Model.SelectedFilter == "gluten-free" ? "rs-filter-chip--active" : "")" 
+               asp-action="Index" asp-route-filter="gluten-free">Gluten-Free</a>
+            <a class="rs-filter-chip @(Model.SelectedFilter == "dairy-free" ? "rs-filter-chip--active" : "")" 
+               asp-action="Index" asp-route-filter="dairy-free">Dairy-Free</a>
         </div>
 
         <!-- Cart Items Banner -->

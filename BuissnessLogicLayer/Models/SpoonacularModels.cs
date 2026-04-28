@@ -41,6 +41,11 @@ namespace BuissnessLogicLayer.Models
         public string Summary { get; set; } = string.Empty;
         public bool Vegetarian { get; set; }
         public bool Vegan { get; set; }
+        public bool GlutenFree { get; set; }
+        public bool DairyFree { get; set; }
+        public bool VeryHealthy { get; set; }
+        public bool Cheap { get; set; }
+        public bool VeryPopular { get; set; }
         public ExtendedIngredient[] ExtendedIngredients { get; set; } = Array.Empty<ExtendedIngredient>();
         public AnalyzedInstruction[] AnalyzedInstructions { get; set; } = Array.Empty<AnalyzedInstruction>();
         public string Instructions { get; set; } = string.Empty;

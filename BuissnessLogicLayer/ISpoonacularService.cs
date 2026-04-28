@@ -12,10 +12,12 @@ namespace BuissnessLogicLayer
         /// </summary>
         /// <param name="ingredients">List of ingredient names from the cart</param>
         /// <param name="number">Number of results to return (default: 5)</param>
+        /// <param name="offset">Offset for pagination (default: 0)</param>
         /// <returns>Array of recipe search results from Spoonacular</returns>
         Task<SpoonacularRecipe[]?> SearchRecipesByIngredientsAsync(
             IReadOnlyList<string> ingredients, 
-            int number = 5);
+            int number = 5,
+            int offset = 0);
 
         /// <summary>
         /// Get detailed information about a specific recipe by ID, including ingredients and instructions.
