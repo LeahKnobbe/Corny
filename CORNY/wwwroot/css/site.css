@@ -1071,40 +1071,6 @@ body {
     }
 
     .pd-fulfillment__icon {
-        width: 22px;
-        height: 22px;
-        object-fit: contain;
-        flex: 0 0 auto;
-    }
-
-    .pd-about {
-        margin-top: 1.25rem;
-        padding-top: 1rem;
-        border-top: 1px solid #e7e7e7;
-    }
-
-    .pd-about__title {
-        font-family: "Faustina", "Times New Roman", serif;
-        font-size: 1.35rem;
-        font-weight: 800;
-        margin: 0 0 0.5rem;
-        color: #111;
-    }
-
-    .pd-about__text {
-        margin: 0;
-    }
-
-    .pd-back {
-        display: inline-block;
-        margin-top: 1.1rem;
-        color: #2f7d32;
-        font-weight: 800;
-        text-decoration: underline;
-    }
-
-    /* Product details: fulfillment icon sizing/alignment */
-    .pd-fulfillment__icon {
         width: 42px; /* bigger */
         height: 42px; /* bigger */
         object-fit: contain;
@@ -1115,7 +1081,48 @@ body {
         align-items: center; /* ensure icon + text line up */
     }
 
-    /* Responsive */
+    .pd-about {
+        background: #f9f9f9;
+        border-radius: 14px;
+        padding: 1.75rem 2rem;
+        margin: 0;
+        margin-top: 0.5rem; /* Additional top margin for extra breathing room */
+    }
+
+    .pd-about__title {
+        font-family: "Faustina", "Times New Roman", serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin: 0 0 1rem;
+        color: #111;
+    }
+
+    .pd-about__text {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #555;
+        margin: 0;
+    }
+
+/* Back link - Updated with Faustina font and green color */
+.pd-back {
+    display: inline-block;
+    margin-top: 1.1rem;
+    color: #2f7d32;
+    font-family: "Faustina", "Times New Roman", serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+    .pd-back:hover {
+        color: #276b2a;
+        text-decoration: underline;
+    }
+
+    /* Responsive adjustments */
     @media (max-width: 992px) {
         .pd-shell {
             grid-template-columns: 1fr;
@@ -1128,6 +1135,11 @@ body {
         .pd-thumb {
             width: 72px;
             height: 72px;
+        }
+        
+        .pd-gallery-wrapper {
+            order: -1; /* Keep gallery on top on mobile */
+            gap: 1.5rem; /* Slightly smaller gap on mobile */
         }
     }
 
@@ -1146,6 +1158,18 @@ body {
         .pd-thumb {
             width: 72px;
             height: 72px;
+        }
+        
+        .pd-about {
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .pd-about__title {
+            font-size: 1.4rem;
+        }
+        
+        .pd-gallery-wrapper {
+            gap: 1.25rem; /* Even smaller gap on smallest screens */
         }
     }
     /* =========================
@@ -2222,7 +2246,6 @@ body {
         max-height: 42px;
         border-radius: 50%;
         object-fit: cover;
-        background: #fff;
         border: 2px solid #e6e6e6;
     }
 
