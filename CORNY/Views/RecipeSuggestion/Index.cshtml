@@ -27,8 +27,7 @@
                 <form asp-action="GenerateNew" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="filter" value="@Model.SelectedFilter" />
-                    <button type="submit" class="rs-generate-btn">
-                        <span class="rs-generate-btn__icon">✨</span>
+                    <button type="submit" class="rs-generate-btn rs-generate-btn--gradient">
                         Generate New Suggestions
                     </button>
                 </form>
