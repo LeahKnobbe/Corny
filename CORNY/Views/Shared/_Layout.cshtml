@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="~/CORNY.styles.css" asp-append-version="true" />
 </head>
 <body>
+    @{
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+        var action = ViewContext.RouteData.Values["action"]?.ToString();
+    }
     <header>
         <nav class="@(ViewData["NavbarClass"] ?? "corny-navbar")">
             <div class="container-fluid">
@@ -17,66 +21,76 @@
                 <div class="corny-nav">
                     <ul class="corny-nav-links">
                         <li>
-                            <a class="corny-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="corny-link @(controller == "Home" && action == "Index" ? "active" : "")" 
+                               asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="dropdown">
-                            <a class="corny-link dropdown-toggle" href="#" id="produceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="corny-link dropdown-toggle @(controller == "Product" && (action == "Fruit" || action == "Vegetables" || action == "Produce") ? "active" : "")" 
+                               href="#" id="produceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Produce
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="produceDropdown">
                                 <li><a class="dropdown-item" href="/Produce/Fruit">Fruit</a></li>
                                 <li><a class="dropdown-item" href="/Produce/Vegetables">Vegetable</a></li>
-                                
                             </ul>
                         </li>
-                        <li><a class="corny-link" href="/Meat">Meat</a></li>
-                        <li><a class="corny-link" href="/AnimalProduct">Animal Product</a></li>
+                        <li><a class="corny-link @(controller == "Product" && action == "Meat" ? "active" : "")" href="/Meat">Meat</a></li>
+                        <li><a class="corny-link @(controller == "Product" && action == "AnimalProduct" ? "active" : "")" href="/AnimalProduct">Animal Product</a></li>
+                        <li><a class="corny-link @(controller == "RecipeSuggestion" ? "active" : "")" 
+                               asp-controller="RecipeSuggestion" asp-action="Index">Recipe Suggestions</a></li>
                         @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("1"))
                         {
                             <li class="dropdown">
-                                <a class="corny-link dropdown-toggle" href="#" id="adminDashboard" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="corny-link dropdown-toggle @(controller == "User" || controller == "Product" || controller == "Order" ? "active" : "")" 
+                                   href="#" id="adminDashboard" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Admin Dashboard
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="adminDashboard">
                                     <li><a class="dropdown-item" href="/User/Index">User Index</a></li>
                                     <li><a class="dropdown-item" href="/Product/Index">Product Index</a></li>
+                                    <li><a class="dropdown-item" href="/Order/Index">Order Index</a></li>
                                 </ul>
                             </li>
                         }
                     </ul>
 
                     <div class="corny-actions">
-                        <div class="corny-search">
-                            <span class="corny-search__icon">🔍</span>
-                            <input type="search" placeholder="Search" aria-label="Search" />
-                        </div>
+    <form class="corny-search" asp-controller="Home" asp-action="Index" method="get" role="search">
+        <span class="corny-search__icon">🔍</span>
+        <input type="search"
+               name="search"
+               value="@Context.Request.Query["search"]"
+               placeholder="Search"
+               aria-label="Search" />
+    </form>
 
-                        <div class="dropdown corny-user-dropdown">
-                            <button class="corny-icon-button dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="~/images/User_Icon.png" alt="User menu" />
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
-                                @if (User?.Identity?.IsAuthenticated ?? false)
-                                {
-                                    <li>
-                                        <form asp-controller="Account" asp-action="Logout" method="post" class="corny-dropdown-form">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="dropdown-item">Logout</button>
-                                        </form>
-                                    </li>
-                                }
-                                else
-                                {
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Register">Sign up</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">Login</a></li>
-                                }
-                            </ul>
-                        </div>
+    <div class="dropdown corny-user-dropdown">
+        <button class="corny-icon-button dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="~/images/UserIconCropped.png" alt="User menu" />
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+            @if (User?.Identity?.IsAuthenticated ?? false)
+            {
+                <li><a class="dropdown-item" href="/Order/MyOrders">My Orders</a></li>
+                <li>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="corny-dropdown-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="dropdown-item">Logout</button>
+                    </form>
+                </li>
+            }
+            else
+            {
+                <li><a class="dropdown-item" asp-controller="Account" asp-action="Register">Sign up</a></li>
+                <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">Login</a></li>
+            }
+        </ul>
+    </div>
 
-                        <a class="corny-icon-button" asp-controller="Cart" asp-action="Index" title="Cart">
-                            <img src="~/images/CartWhiteButton.png" alt="Cart" />
-                        </a>
-                    </div>
+    <a class="corny-icon-button" asp-controller="Cart" asp-action="Index" title="Cart">
+        <img src="~/images/CartIconCropped.png" alt="Cart" />
+    </a>
+</div>
                 </div>
             </div>
         </nav>

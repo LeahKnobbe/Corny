@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Index";
+
+    const int descriptionWordLimit = 12;
 }
 
 <h1>Index</h1>
@@ -12,6 +14,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th>Photo</th>
             <th>@Html.DisplayNameFor(model => model.ProductId)</th>
             <th>@Html.DisplayNameFor(model => model.Name)</th>
             <th>@Html.DisplayNameFor(model => model.Description)</th>
@@ -27,10 +30,23 @@
     <tbody>
         @foreach (var item in Model)
         {
+            var imageUrl = string.IsNullOrWhiteSpace(item.ImageUrl)
+                ? $"https://via.placeholder.com/90x70?text={Uri.EscapeDataString(item.Name)}"
+                : item.ImageUrl;
+
+            var words = (item.Description ?? string.Empty)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var shortDescription = words.Length > descriptionWordLimit
+                ? string.Join(' ', words.Take(descriptionWordLimit)) + "..."
+                : item.Description;
+
             <tr>
+                <td>
+                    <img src="@imageUrl" alt="@item.Name" width="90" height="70" style="object-fit: cover;" />
+                </td>
                 <td>@Html.DisplayFor(modelItem => item.ProductId)</td>
                 <td>@Html.DisplayFor(modelItem => item.Name)</td>
-                <td>@Html.DisplayFor(modelItem => item.Description)</td>
+                <td>@shortDescription</td>
                 <td>@Html.DisplayFor(modelItem => item.Sizing)</td>
                 <td>@Html.DisplayFor(modelItem => item.InventoryQuantity)</td>
                 <td>@Html.DisplayFor(modelItem => item.IsForSale)</td>

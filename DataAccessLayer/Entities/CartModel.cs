@@ -1,27 +1,27 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DataAccessLayer.Entities
 {
-    [Table("CartItem")]
-    public class CartItemModel
+    [Table("Cart")]
+    public class CartModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int CartItemId { get; set; }
-
         [Column("Cart_ID")]
         public int CartId { get; set; }
 
-        public CartModel? Cart { get; set; }
+        [Column("Status")]
+        public string Status { get; set; } = string.Empty;
+
+        [Column("Create_Date")]
+        public DateTime CreateDate { get; set; }
 
         [Column("UserId")]
         public int UserId { get; set; }
 
-        [Column("ProductId")]
-        public int ProductId { get; set; }
-
-        [Column("Quantity")]
-        public int Quantity { get; set; }
+        public ICollection<CartItemModel> CartItems { get; set; } = new List<CartItemModel>();
     }
 }

@@ -1,0 +1,218 @@
+﻿@using BuissnessLogicLayer.Models
+@model CORNY.Models.ViewModels.RecipeSuggestionViewModel
+
+@{
+    ViewData["Title"] = "Recipe Suggestions";
+}
+
+<div class="recipe-suggestions-page">
+    <section class="rs-page">
+        <!-- Breadcrumb -->
+        <nav class="rs-breadcrumb" aria-label="Breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            <span class="rs-breadcrumb__sep">&gt;</span>
+            <span class="rs-breadcrumb__current">Recipe Suggestions</span>
+        </nav>
+
+        <!-- Header Section -->
+        <div class="rs-header">
+            <div class="rs-header__left">
+                <h1 class="rs-title">Recipe Suggestions</h1>
+                <p class="rs-subtitle">
+                    Our AI looks at the items in your cart to suggest delicious recipes 
+                    and recommend fresh ingredients you may need.
+                </p>
+            </div>
+            <div class="rs-header__right">
+                <form asp-action="GenerateNew" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="filter" value="@Model.SelectedFilter" />
+                    <input type="hidden" name="currentOffset" value="@Model.CurrentOffset" />
+                    <button type="submit" class="rs-generate-btn rs-generate-btn--gradient">
+                        Generate New Suggestions
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="rs-filters">
+            <a class="rs-filter-chip @(Model.SelectedFilter == "high-protein" ? "rs-filter-chip--active" : "")" 
+               asp-action="Index" asp-route-filter="high-protein" asp-route-offset="0">High Protein</a>
+            <a class="rs-filter-chip @(Model.SelectedFilter == "vegetarian" ? "rs-filter-chip--active" : "")" 
+               asp-action="Index" asp-route-filter="vegetarian" asp-route-offset="0">Vegetarian</a>
+            <a class="rs-filter-chip @(Model.SelectedFilter == "quick-meals" ? "rs-filter-chip--active" : "")" 
+               asp-action="Index" asp-route-filter="quick-meals" asp-route-offset="0">Quick Meals</a>
+            <a class="rs-filter-chip @(Model.SelectedFilter == "gluten-free" ? "rs-filter-chip--active" : "")" 
+               asp-action="Index" asp-route-filter="gluten-free" asp-route-offset="0">Gluten-Free</a>
+            <a class="rs-filter-chip @(Model.SelectedFilter == "dairy-free" ? "rs-filter-chip--active" : "")" 
+               asp-action="Index" asp-route-filter="dairy-free" asp-route-offset="0">Dairy-Free</a>
+        </div>
+
+        <!-- Cart Items Banner -->
+        @if (Model.CartItems.Any())
+        {
+            <div class="rs-cart-banner">
+                <span class="rs-cart-banner__label">Using items from your cart:</span>
+                <div class="rs-cart-banner__items">
+                    @foreach (var item in Model.CartItems.Take(4))
+                    {
+                        var cartImageUrl = string.IsNullOrWhiteSpace(item.ImageUrl) 
+                            ? "/images/placeholder-product.jpg" 
+                            : item.ImageUrl;
+                        
+                        <div class="rs-cart-banner__item">
+                            <img src="@cartImageUrl" 
+                                 alt="@item.Product.Name" 
+                                 class="rs-cart-banner__image"
+                                 onerror="this.onerror=null;this.src='/images/placeholder-product.jpg';" />
+                            <span class="rs-cart-banner__name">@item.Product.Name</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Three Column Layout -->
+        <div class="rs-shell">
+            <!-- Left Column: Your Cart Ingredients -->
+            <aside class="rs-card rs-cart-ingredients">
+                <h2 class="rs-card__title">Your Cart Ingredients</h2>
+                
+                @if (!Model.CartItems.Any())
+                {
+                    <p class="text-muted">Your cart is empty. Add some items to get recipe suggestions!</p>
+                }
+                else
+                {
+                    <div class="rs-ingredient-list">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            var ingredientImageUrl = string.IsNullOrWhiteSpace(item.ImageUrl) 
+                                ? "/images/placeholder-product.jpg" 
+                                : item.ImageUrl;
+                            
+                            <div class="rs-ingredient">
+                                <img src="@ingredientImageUrl" 
+                                     alt="@item.Product.Name" 
+                                     class="rs-ingredient__image"
+                                     onerror="this.onerror=null;this.src='/images/placeholder-product.jpg';" />
+                                <div class="rs-ingredient__info">
+                                    <div class="rs-ingredient__name">@item.Product.Name</div>
+                                    <div class="rs-ingredient__qty">@item.Quantity × @(item.Product.Sizing ?? "Each")</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <a asp-controller="Cart" asp-action="Index" class="rs-card__button">View Cart</a>
+                }
+            </aside>
+
+            <!-- Center Column: AI Recommended Recipes -->
+            <div class="rs-recipes">
+                <h2 class="rs-card__title rs-recipes__title">AI Recommended Recipes</h2>
+                
+                @if (!Model.Recipes.Any())
+                {
+                    <div class="rs-empty">
+                        <p class="text-muted">Add items to your cart to get personalized recipe suggestions!</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="rs-recipe-list">
+                        @foreach (var recipe in Model.Recipes)
+                        {
+                            var recipeImageUrl = string.IsNullOrWhiteSpace(recipe.ImageUrl) 
+                                ? "/images/placeholder-recipe.jpg" 
+                                : recipe.ImageUrl;
+                            
+                            <article class="rs-recipe-card">
+                                <div class="rs-recipe-card__image-wrapper">
+                                    <img src="@recipeImageUrl" 
+                                         alt="@recipe.Title" 
+                                         class="rs-recipe-card__image"
+                                         onerror="this.onerror=null;this.src='/images/placeholder-recipe.jpg';" />
+                                </div>
+                                
+                                <div class="rs-recipe-card__body">
+                                    <h3 class="rs-recipe-card__title">@recipe.Title</h3>
+                                    <p class="rs-recipe-card__desc">@recipe.Description</p>
+                                    
+                                    <div class="rs-recipe-card__tags">
+                                        @foreach (var tag in recipe.Tags)
+                                        {
+                                            <span class="rs-recipe-tag">@tag</span>
+                                        }
+                                    </div>
+                                    
+                                    <a asp-controller="RecipeSuggestion" 
+                                       asp-action="Details" 
+                                       asp-route-spoonacularId="@recipe.SpoonacularRecipeId"
+                                       asp-route-title="@recipe.Title"
+                                       class="rs-recipe-card__button">
+                                        View Recipe
+                                    </a>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Right Column: You May Also Need -->
+            <aside class="rs-card rs-addons">
+                <h2 class="rs-card__title">You May Also Need</h2>
+                
+                @if (!Model.SuggestedAddons.Any())
+                {
+                    <p class="text-muted">No suggestions available.</p>
+                }
+                else
+                {
+                    <div class="rs-addon-list">
+                        @foreach (var addon in Model.SuggestedAddons)
+                        {
+                            var addonImageUrl = string.IsNullOrWhiteSpace(addon.ImageUrl) 
+                                ? "/images/placeholder-product.jpg" 
+                                : addon.ImageUrl;
+                        
+                            <div class="rs-addon">
+                                <img src="@addonImageUrl" 
+                                     alt="@addon.Name" 
+                                     class="rs-addon__image"
+                                     onerror="this.onerror=null;this.src='/images/placeholder-product.jpg';" />
+                                <div class="rs-addon__info">
+                                    <div class="rs-addon__name">@addon.Name</div>
+                                    <div class="rs-addon__price">$@addon.Price.ToString("0.00")</div>
+                                </div>
+                                <form asp-controller="Cart" asp-action="Add" method="post" class="rs-addon__form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@addon.ProductId" />
+                                    <input type="hidden" name="quantity" value="1" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="rs-addon__button">Add</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                    
+                    <a asp-controller="Product" asp-action="All" class="rs-card__button">View All Products</a>
+                }
+            </aside>
+        </div>
+
+        <!-- Bottom Banner -->
+        <div class="rs-banner">
+            <div class="rs-banner__content">
+                <div class="rs-banner__icon">🌿</div>
+                <div class="rs-banner__text">
+                    <div class="rs-banner__title">Fresh ideas, farm to table.</div>
+                    <div class="rs-banner__subtitle">Good food starts with fresh ingredients.</div>
+                </div>
+            </div>
+            <a asp-controller="Product" asp-action="Produce" class="rs-banner__button">Explore Produce</a>
+        </div>
+    </section>
+</div>

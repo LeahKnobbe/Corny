@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Linq;
 using BuissnessLogicLayer;
 using CORNY.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +18,20 @@ namespace CORNY.Controllers
             this.productService = productService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search)
         {
             var products = await productService.GetProductsAsync();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                products = products.Where(product =>
+                    product.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || (product.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
+            ViewData["Search"] = search;
+
             return View(products);
         }
 

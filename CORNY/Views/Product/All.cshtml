@@ -3,7 +3,7 @@
 @model IEnumerable<DataAccessLayer.Entities.ProductModel>
 
 @{
-    ViewData["Title"] = "Produce";
+    ViewData["Title"] = "All Products";
     var currentSort = Context.Request.Query["sort"].ToString();
 }
 
@@ -11,15 +11,15 @@
     <nav class="fruit-breadcrumb" aria-label="Breadcrumb">
         <a asp-controller="Home" asp-action="Index">Home</a>
         <span class="fruit-breadcrumb__sep">&gt;</span>
-        <span class="fruit-breadcrumb__current">Produce</span>
+        <span class="fruit-breadcrumb__current">All Products</span>
     </nav>
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 fruit-page__header">
-        <h1 class="fruit-title mb-0">Produce</h1>
+        <h1 class="fruit-title mb-0">All Products</h1>
 
-        <form asp-controller="Product" asp-action="Produce" method="get">
-            <label class="me-2" for="produceSort">Sort</label>
-            <select id="produceSort" name="sort" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+        <form asp-controller="Product" asp-action="All" method="get">
+            <label class="me-2" for="allSort">Sort</label>
+            <select id="allSort" name="sort" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
                 <option value="" selected="@(string.IsNullOrWhiteSpace(currentSort))">Default</option>
                 <option value="price_asc" selected="@(currentSort == "price_asc")">Price: Low to High</option>
                 <option value="price_desc" selected="@(currentSort == "price_desc")">Price: High to Low</option>
@@ -34,36 +34,36 @@
 
     @if (!Model.Any())
     {
-        <p class="text-muted">No produce products are available yet.</p>
+        <p class="text-muted">No products are available yet.</p>
     }
     else
     {
         <div class="fruit-grid">
-            @foreach (var produce in Model)
+            @foreach (var product in Model)
             {
-                var imageUrl = string.IsNullOrWhiteSpace(produce.ImageUrl)
-                    ? $"https://via.placeholder.com/240x180?text={Uri.EscapeDataString(produce.Name)}"
-                    : produce.ImageUrl;
+                var imageUrl = string.IsNullOrWhiteSpace(product.ImageUrl)
+                    ? $"https://via.placeholder.com/240x180?text={Uri.EscapeDataString(product.Name)}"
+                    : product.ImageUrl;
 
                 <article class="fruit-card">
                     <a class="fruit-card-link"
                        asp-controller="Product"
                        asp-action="Details"
-                       asp-route-id="@produce.ProductId">
+                       asp-route-id="@product.ProductId">
                         <img class="fruit-card__image"
                              src="@imageUrl"
-                             alt="@produce.Name" />
+                             alt="@product.Name" />
 
                         <div class="fruit-card__body">
-                            <h2 class="fruit-card__name">@produce.Name</h2>
-                            <div class="fruit-card__price">$@produce.Pricing.ToString("0.00")</div>
+                            <h2 class="fruit-card__name">@product.Name</h2>
+                            <div class="fruit-card__price">$@product.Pricing.ToString("0.00")</div>
                             <div class="fruit-card__rating">★★★★★</div>
                         </div>
                     </a>
 
                     <form asp-controller="Cart" asp-action="Add" method="post" class="fruit-card__form">
                         @Html.AntiForgeryToken()
-                        <input type="hidden" name="productId" value="@produce.ProductId" />
+                        <input type="hidden" name="productId" value="@product.ProductId" />
                         <input type="hidden" name="quantity" value="1" />
                         <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
                         <button class="fruit-card__button" type="submit">Add to Cart</button>

@@ -1,0 +1,459 @@
+﻿@model CORNY.Models.ViewModels.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+    var sectionIcon = "/images/cart/DeliveryGreen.png";
+}
+
+<section class="co-page">
+    <h1 class="co-heading">You're almost there…!</h1>
+
+    <div class="co-shell">
+        <!-- LEFT COLUMN with timeline -->
+        <div class="co-main co-timeline">
+
+            <!-- Delivery Address -->
+            <div class="co-section co-timeline__step">
+                <div class="co-section__header">
+                    <div class="co-timeline__dot">
+                        <img class="co-section__icon-img" src="@sectionIcon" alt="" />
+                    </div>
+                    <h2 class="co-section__title">Delivery Address</h2>
+                </div>
+                <div class="co-section__body">
+                    <div class="co-cards-row" id="addressCardsRow">
+                        <div class="co-address-card co-address-card--selected">
+                            <button type="button" class="co-address-card__delete" title="Remove address">&times;</button>
+                            <div class="co-address-card__name">@Model.UserFullName</div>
+                            <div class="co-address-card__line">1234 S. Dominican St., River Forest, IL, 602312</div>
+                        </div>
+                        <button type="button" class="co-add-card" id="openAddAddressBtn">
+                            <span class="co-add-card__icon">+</span>
+                            <span class="co-add-card__label">Add Address</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="co-section co-timeline__step">
+                <div class="co-section__header">
+                    <div class="co-timeline__dot">
+                        <img class="co-section__icon-img" src="@sectionIcon" alt="" />
+                    </div>
+                    <h2 class="co-section__title">Order Summary</h2>
+                </div>
+                <div class="co-section__body">
+                    <div class="co-order-items">
+                        @foreach (var item in Model.Items)
+                        {
+                            var product = item.Product;
+                            var unitLabel = !string.IsNullOrWhiteSpace(product.Sizing) ? product.Sizing : "Each";
+
+                            <div class="co-order-item">
+                                <div class="co-order-item__image">
+                                    <img src="@(string.IsNullOrWhiteSpace(item.ImageUrl)
+                                                ? "https://via.placeholder.com/64?text=Item"
+                                                : item.ImageUrl)"
+                                         alt="@product.Name"
+                                         onerror="this.onerror=null;this.src='https://via.placeholder.com/64?text=Item';" />
+                                </div>
+                                <div class="co-order-item__info">
+                                    <span class="co-order-item__name">@product.Name</span><span class="co-order-item__size">, @unitLabel</span>
+                                </div>
+                                <div class="co-order-item__right">
+                                    <div class="co-order-item__price">$@item.LineTotal.ToString("0.00")</div>
+                                    <div class="co-order-item__qty">@item.Quantity</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="co-section co-timeline__step co-timeline__step--last">
+                <div class="co-section__header">
+                    <div class="co-timeline__dot">
+                        <img class="co-section__icon-img" src="@sectionIcon" alt="" />
+                    </div>
+                    <h2 class="co-section__title">Payment Details</h2>
+                </div>
+                <div class="co-section__body">
+                    <div class="co-payment-options">
+                        <label class="co-radio">
+                            <input type="radio" name="paymentMethod" value="card" checked />
+                            <span class="co-radio__label">Credit / Debit Card</span>
+                        </label>
+                        <label class="co-radio">
+                            <input type="radio" name="paymentMethod" value="paypal" />
+                            <span class="co-radio__label co-radio__label--muted">PayPal</span>
+                        </label>
+                    </div>
+
+                    <div class="co-cards-row">
+                        <div class="co-payment-card co-payment-card--selected">
+                            <div class="co-payment-card__brand">VISA</div>
+                            <div class="co-payment-card__number">●●●●● ●●●●● ●●●● 2123</div>
+                            <div class="co-payment-card__expiry">Expires 12-8</div>
+                        </div>
+                        <button type="button" class="co-add-card">
+                            <span class="co-add-card__icon">+</span>
+                            <span class="co-add-card__label">Add Card</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Summary sidebar -->
+        <aside class="co-summary" aria-label="Order totals">
+            <div class="co-summary__card">
+                <div class="co-summary__row co-summary__row--top">
+                    <span class="co-summary__label"><strong>Subtotal</strong> <span class="co-summary__muted">(@Model.ItemCount item@(Model.ItemCount == 1 ? "" : "s"))</span></span>
+                    <span class="co-summary__value">$@Model.Subtotal.ToString("0.00")</span>
+                </div>
+
+                <div class="co-summary__row">
+                    <span class="co-summary__label">Delivery</span>
+                    <span class="co-summary__value">$@Model.Delivery.ToString("0.00")</span>
+                </div>
+
+                <div class="co-summary__row co-summary__row--promo">
+                    <span class="co-summary__label">Promo</span>
+                    <div class="co-promo">
+                        <input type="text" class="co-promo__input" placeholder="" />
+                        <button type="button" class="co-promo__btn">Apply</button>
+                    </div>
+                </div>
+
+                <div class="co-summary__row co-summary__row--tax">
+                    <span class="co-summary__label"><strong>Taxes</strong></span>
+                    <span class="co-summary__value">$@Model.Taxes.ToString("0.00")</span>
+                </div>
+
+                <hr class="co-summary__hr" />
+
+                <div class="co-summary__row co-summary__row--total">
+                    <span class="co-summary__label"><strong>Total</strong></span>
+                    <span class="co-summary__value"><strong>$@Model.Total.ToString("0.00")</strong></span>
+                </div>
+
+                <form asp-action="PlaceOrder" method="post" id="placeOrderForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="shippingAddress" id="shippingAddressInput" value="" />
+                    <button type="submit" class="co-summary__cta">
+                        Checkout
+                    </button>
+                </form >
+            </div>
+        </aside>
+    </div>
+</section>
+
+<!-- Add Address Modal -->
+<div class="co-modal-overlay" id="addAddressOverlay">
+    <div class="co-modal">
+        <div class="co-modal__header">
+            <h2 class="co-modal__title">Add address</h2>
+            <button type="button" class="co-modal__close" id="closeAddAddressBtn">&times;</button>
+        </div>
+
+        <form id="addAddressForm" class="co-modal__body" novalidate>
+            <div class="co-field co-field--full">
+                <label class="co-field__label">Country/Region</label>
+                <select class="co-field__input co-field__select">
+                    <option selected>United States</option>
+                    <option>Canada</option>
+                    <option>Mexico</option>
+                </select>
+            </div>
+
+            <div class="co-field-row">
+                <div class="co-field">
+                    <label class="co-field__label">First name</label>
+                    <input type="text" class="co-field__input" id="addrFirstName" value="@Model.UserFullName.Split(' ').FirstOrDefault()" />
+                    <span class="co-field__error" id="errFirstName"></span>
+                </div>
+                <div class="co-field">
+                    <label class="co-field__label">Last name</label>
+                    <input type="text" class="co-field__input" id="addrLastName" value="@(Model.UserFullName.Split(' ').Length > 1 ? Model.UserFullName.Split(' ').Last() : "")" />
+                    <span class="co-field__error" id="errLastName"></span>
+                </div>
+            </div>
+
+            <div class="co-field co-field--full co-field--icon">
+                <label class="co-field__label">Address</label>
+                <input type="text" class="co-field__input" id="addrStreet" placeholder="" />
+                <span class="co-field__icon">🔍</span>
+                <span class="co-field__error" id="errStreet"></span>
+            </div>
+
+            <div class="co-field co-field--full">
+                <label class="co-field__label">Apartment, suite, etc. (optional)</label>
+                <input type="text" class="co-field__input" id="addrApt" placeholder="" />
+            </div>
+
+            <div class="co-field-row co-field-row--3">
+                <div class="co-field">
+                    <label class="co-field__label">City</label>
+                    <input type="text" class="co-field__input" id="addrCity" placeholder="" />
+                    <span class="co-field__error" id="errCity"></span>
+                </div>
+                <div class="co-field">
+                    <label class="co-field__label">State</label>
+                    <select class="co-field__input co-field__select" id="addrState">
+                        <option value="">State</option>
+                        <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+                        <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+                        <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
+                        <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
+                        <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+                        <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
+                        <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
+                        <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
+                        <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
+                        <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+                        <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
+                        <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
+                        <option>WI</option><option>WY</option>
+                    </select>
+                    <span class="co-field__error" id="errState"></span>
+                </div>
+                <div class="co-field">
+                    <label class="co-field__label">ZIP code</label>
+                    <input type="text" class="co-field__input" id="addrZip" placeholder="" maxlength="10" />
+                    <span class="co-field__error" id="errZip"></span>
+                </div>
+            </div>
+
+            <div class="co-field co-field--full">
+                <label class="co-field__label">Phone (optional)</label>
+                <input type="tel" class="co-field__input" id="addrPhone" placeholder="" />
+                <span class="co-field__error" id="errPhone"></span>
+            </div>
+
+            <div class="co-field co-field--full">
+                <label class="co-check">
+                    <input type="checkbox" class="co-check__input" id="addrDefault" />
+                    <span class="co-check__label">This is my default address</span>
+                </label>
+            </div>
+
+            <div class="co-modal__actions">
+                <button type="button" class="co-modal__btn co-modal__btn--cancel" id="cancelAddAddressBtn">Cancel</button>
+                <button type="button" class="co-modal__btn co-modal__btn--save" id="saveAddAddressBtn">Save address</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var overlay = document.getElementById('addAddressOverlay');
+            var openBtn = document.getElementById('openAddAddressBtn');
+            var closeBtn = document.getElementById('closeAddAddressBtn');
+            var cancelBtn = document.getElementById('cancelAddAddressBtn');
+            var saveBtn = document.getElementById('saveAddAddressBtn');
+            var cardsRow = document.getElementById('addressCardsRow');
+
+            function openModal() {
+                overlay.classList.add('co-modal-overlay--open');
+                document.body.style.overflow = 'hidden';
+                clearErrors();
+            }
+
+            function closeModal() {
+                overlay.classList.remove('co-modal-overlay--open');
+                document.body.style.overflow = '';
+            }
+
+            /* ---- Validation helpers ---- */
+            function clearErrors() {
+                document.querySelectorAll('.co-field__error').forEach(function (el) { el.textContent = ''; });
+                document.querySelectorAll('.co-field__input--invalid').forEach(function (el) { el.classList.remove('co-field__input--invalid'); });
+            }
+
+            function setError(inputId, errorId, msg) {
+                document.getElementById(errorId).textContent = msg;
+                document.getElementById(inputId).classList.add('co-field__input--invalid');
+            }
+
+            function validateAddress() {
+                clearErrors();
+                var valid = true;
+
+                var first = document.getElementById('addrFirstName').value.trim();
+                var last = document.getElementById('addrLastName').value.trim();
+                var street = document.getElementById('addrStreet').value.trim();
+                var city = document.getElementById('addrCity').value.trim();
+                var state = document.getElementById('addrState').value.trim();
+                var zip = document.getElementById('addrZip').value.trim();
+                var phone = document.getElementById('addrPhone').value.trim();
+
+                // First name: letters, spaces, hyphens, apostrophes only
+                if (!first) {
+                    setError('addrFirstName', 'errFirstName', 'First name is required.');
+                    valid = false;
+                } else if (!/^[A-Za-z\s'\-]+$/.test(first)) {
+                    setError('addrFirstName', 'errFirstName', 'Letters only.');
+                    valid = false;
+                }
+
+                // Last name
+                if (!last) {
+                    setError('addrLastName', 'errLastName', 'Last name is required.');
+                    valid = false;
+                } else if (!/^[A-Za-z\s'\-]+$/.test(last)) {
+                    setError('addrLastName', 'errLastName', 'Letters only.');
+                    valid = false;
+                }
+
+                // Street: must have a number followed by text (basic street format)
+                if (!street) {
+                    setError('addrStreet', 'errStreet', 'Address is required.');
+                    valid = false;
+                } else if (!/^\d+\s+.{2,}/.test(street)) {
+                    setError('addrStreet', 'errStreet', 'Enter a valid street address (e.g. 123 Main St).');
+                    valid = false;
+                }
+
+                // City: letters and spaces
+                if (!city) {
+                    setError('addrCity', 'errCity', 'City is required.');
+                    valid = false;
+                } else if (!/^[A-Za-z\s.\-]+$/.test(city)) {
+                    setError('addrCity', 'errCity', 'Enter a valid city name.');
+                    valid = false;
+                }
+
+                // State
+                if (!state) {
+                    setError('addrState', 'errState', 'Select a state.');
+                    valid = false;
+                }
+
+                // ZIP: US format 5 digits or 5+4
+                if (!zip) {
+                    setError('addrZip', 'errZip', 'ZIP code is required.');
+                    valid = false;
+                } else if (!/^\d{5}(-\d{4})?$/.test(zip)) {
+                    setError('addrZip', 'errZip', 'Enter a valid ZIP (e.g. 60305 or 60305-1234).');
+                    valid = false;
+                }
+
+                // Phone (optional but must be valid if provided)
+                if (phone && !/^[\d\s()+\-]{7,20}$/.test(phone)) {
+                    setError('addrPhone', 'errPhone', 'Enter a valid phone number.');
+                    valid = false;
+                }
+
+                return valid;
+            }
+
+            /* ---- Card management ---- */
+            function wireDeleteButtons() {
+                cardsRow.querySelectorAll('.co-address-card__delete').forEach(function (btn) {
+                    btn.onclick = function (e) {
+                        e.stopPropagation();
+                        var card = btn.closest('.co-address-card');
+                        var wasSelected = card.classList.contains('co-address-card--selected');
+                        card.remove();
+                        if (wasSelected) {
+                            var first = cardsRow.querySelector('.co-address-card');
+                            if (first) first.classList.add('co-address-card--selected');
+                        }
+                    };
+                });
+            }
+
+            function wireSelectCards() {
+                cardsRow.querySelectorAll('.co-address-card').forEach(function (c) {
+                    c.style.cursor = 'pointer';
+                    c.onclick = function (e) {
+                        if (e.target.closest('.co-address-card__delete')) return;
+                        cardsRow.querySelectorAll('.co-address-card').forEach(function (cc) {
+                            cc.classList.remove('co-address-card--selected');
+                        });
+                        c.classList.add('co-address-card--selected');
+                    };
+                });
+            }
+
+            wireDeleteButtons();
+            wireSelectCards();
+
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeModal();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && overlay.classList.contains('co-modal-overlay--open')) {
+                    closeModal();
+                }
+            });
+
+            saveBtn.addEventListener('click', function () {
+                if (!validateAddress()) return;
+
+                var first = document.getElementById('addrFirstName').value.trim();
+                var last = document.getElementById('addrLastName').value.trim();
+                var street = document.getElementById('addrStreet').value.trim();
+                var apt = document.getElementById('addrApt').value.trim();
+                var city = document.getElementById('addrCity').value.trim();
+                var state = document.getElementById('addrState').value.trim();
+                var zip = document.getElementById('addrZip').value.trim();
+
+                var fullName = first + ' ' + last;
+                var line = street + (apt ? ', ' + apt : '') + ', ' + city + ', ' + state + ', ' + zip;
+
+                cardsRow.querySelectorAll('.co-address-card').forEach(function (card) {
+                    card.classList.remove('co-address-card--selected');
+                });
+
+                var card = document.createElement('div');
+                card.className = 'co-address-card co-address-card--selected';
+                card.innerHTML =
+                    '<button type="button" class="co-address-card__delete" title="Remove address">&times;</button>' +
+                    '<div class="co-address-card__name">' + fullName + '</div>' +
+                    '<div class="co-address-card__line">' + line + '</div>';
+
+                cardsRow.insertBefore(card, openBtn);
+
+                wireDeleteButtons();
+                wireSelectCards();
+
+                document.getElementById('addrStreet').value = '';
+                document.getElementById('addrApt').value = '';
+                document.getElementById('addrCity').value = '';
+                document.getElementById('addrState').value = '';
+                document.getElementById('addrZip').value = '';
+                document.getElementById('addrPhone').value = '';
+                document.getElementById('addrDefault').checked = false;
+
+                closeModal();
+            });
+
+            var orderForm = document.getElementById('placeOrderForm');
+            var shippingInput = document.getElementById('shippingAddressInput');
+
+            function getSelectedAddressLine() {
+                var selected = document.querySelector('.co-address-card--selected');
+                if (!selected) return '';
+                var line = selected.querySelector('.co-address-card__line');
+                return line ? line.textContent.trim() : '';
+            }
+
+            if (orderForm && shippingInput) {
+                orderForm.addEventListener('submit', function () {
+                    shippingInput.value = getSelectedAddressLine();
+                });
+            }
+        })();
+    </script>
+}
