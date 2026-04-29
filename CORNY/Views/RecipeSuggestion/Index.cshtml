@@ -27,6 +27,7 @@
                 <form asp-action="GenerateNew" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="filter" value="@Model.SelectedFilter" />
+                    <input type="hidden" name="currentOffset" value="@Model.CurrentOffset" />
                     <button type="submit" class="rs-generate-btn rs-generate-btn--gradient">
                         Generate New Suggestions
                     </button>
@@ -37,15 +38,15 @@
         <!-- Filter Chips -->
         <div class="rs-filters">
             <a class="rs-filter-chip @(Model.SelectedFilter == "high-protein" ? "rs-filter-chip--active" : "")" 
-               asp-action="Index" asp-route-filter="high-protein">High Protein</a>
+               asp-action="Index" asp-route-filter="high-protein" asp-route-offset="0">High Protein</a>
             <a class="rs-filter-chip @(Model.SelectedFilter == "vegetarian" ? "rs-filter-chip--active" : "")" 
-               asp-action="Index" asp-route-filter="vegetarian">Vegetarian</a>
+               asp-action="Index" asp-route-filter="vegetarian" asp-route-offset="0">Vegetarian</a>
             <a class="rs-filter-chip @(Model.SelectedFilter == "quick-meals" ? "rs-filter-chip--active" : "")" 
-               asp-action="Index" asp-route-filter="quick-meals">Quick Meals</a>
+               asp-action="Index" asp-route-filter="quick-meals" asp-route-offset="0">Quick Meals</a>
             <a class="rs-filter-chip @(Model.SelectedFilter == "gluten-free" ? "rs-filter-chip--active" : "")" 
-               asp-action="Index" asp-route-filter="gluten-free">Gluten-Free</a>
+               asp-action="Index" asp-route-filter="gluten-free" asp-route-offset="0">Gluten-Free</a>
             <a class="rs-filter-chip @(Model.SelectedFilter == "dairy-free" ? "rs-filter-chip--active" : "")" 
-               asp-action="Index" asp-route-filter="dairy-free">Dairy-Free</a>
+               asp-action="Index" asp-route-filter="dairy-free" asp-route-offset="0">Dairy-Free</a>
         </div>
 
         <!-- Cart Items Banner -->

@@ -35,7 +35,7 @@ namespace CORNY.Controllers
 
         [HttpGet]
         [Route("RecipeSuggestions")]
-        public async Task<IActionResult> Index(string? filter)
+        public async Task<IActionResult> Index(string? filter, int offset = 0)
         {
             var userId = GetUserId();
             if (userId == null)
@@ -74,18 +74,20 @@ namespace CORNY.Controllers
 
                 var allProducts = await productService.GetProductsAsync();
 
-                // Get recipe suggestions from the service (uses OpenAI + Spoonacular or falls back to mock)
+                // Get recipe suggestions from the service with offset
                 var suggestions = await recipeSuggestionService.GetRecipeSuggestionsAsync(
                     cartItemsInfo,
                     allProducts.ToList(),
-                    filter);
+                    filter,
+                    offset);
 
                 var viewModel = new RecipeSuggestionViewModel
                 {
                     CartItems = cartProducts,
                     Recipes = suggestions.Recipes,
                     SuggestedAddons = suggestions.SuggestedAddons,
-                    SelectedFilter = filter
+                    SelectedFilter = filter,
+                    CurrentOffset = offset
                 };
 
                 return View(viewModel);
@@ -100,7 +102,8 @@ namespace CORNY.Controllers
                     CartItems = Array.Empty<CartItemViewModel>(),
                     Recipes = Array.Empty<RecipeCardViewModel>(),
                     SuggestedAddons = Array.Empty<AddonProductViewModel>(),
-                    SelectedFilter = filter
+                    SelectedFilter = filter,
+                    CurrentOffset = offset
                 };
                 
                 return View(emptyViewModel);
@@ -109,10 +112,13 @@ namespace CORNY.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult GenerateNew(string? filter)
+        public IActionResult GenerateNew(string? filter, int currentOffset = 0)
         {
-            // Regenerate suggestions with the selected filter
-            return RedirectToAction(nameof(Index), new { filter });
+            // Increment offset by 3 to get different recipes
+            var newOffset = currentOffset + 3;
+            
+            // Regenerate suggestions with the selected filter and new offset
+            return RedirectToAction(nameof(Index), new { filter, offset = newOffset });
         }
 
         [HttpGet]

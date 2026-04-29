@@ -1,4 +1,5 @@
 using BuissnessLogicLayer.Models;
+using DataAccessLayer.Entities;
 
 namespace BuissnessLogicLayer
 {
@@ -13,11 +14,13 @@ namespace BuissnessLogicLayer
         /// <param name="cartItems">Items currently in the user's cart</param>
         /// <param name="availableProducts">All products available in the database</param>
         /// <param name="filter">Optional filter (e.g., "vegetarian", "high-protein", "quick-meals")</param>
+        /// <param name="offset">Optional offset for pagination</param>
         /// <returns>Recipe suggestions and recommended add-on products</returns>
         Task<RecipeSuggestionResult> GetRecipeSuggestionsAsync(
             IReadOnlyList<CartItemInfo> cartItems,
-            IReadOnlyList<DataAccessLayer.Entities.ProductModel> availableProducts,
-            string? filter = null);
+            IReadOnlyList<ProductModel> availableProducts,
+            string? filter = null,
+            int offset = 0);
     }
 
     public class RecipeSuggestionResult

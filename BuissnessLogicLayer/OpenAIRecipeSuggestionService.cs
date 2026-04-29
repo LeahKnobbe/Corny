@@ -21,7 +21,6 @@ namespace BuissnessLogicLayer
         private readonly IProductMatchingService productMatchingService;
         private readonly MockRecipeSuggestionService fallbackService;
         private readonly string? openAiApiKey;
-        private static int offsetCounter = 0;
 
         public OpenAIRecipeSuggestionService(
             HttpClient httpClient,
@@ -51,7 +50,8 @@ namespace BuissnessLogicLayer
         public async Task<RecipeSuggestionResult> GetRecipeSuggestionsAsync(
             IReadOnlyList<CartItemInfo> cartItems,
             IReadOnlyList<ProductModel> availableProducts,
-            string? filter = null)
+            string? filter = null,
+            int offset = 0)
         {
             // If no API keys configured, use fallback
             if (string.IsNullOrWhiteSpace(openAiApiKey))
@@ -69,25 +69,22 @@ namespace BuissnessLogicLayer
             try
             {
                 logger.LogInformation("Starting recipe suggestion with HYBRID semantic + keyword filtering");
-                logger.LogInformation("Filter: {Filter}", filter ?? "None");
+                logger.LogInformation("Filter: {Filter}, Offset: {Offset}", filter ?? "None", offset);
 
-                // Increment offset for variety (wraps around at 20)
-                offsetCounter = (offsetCounter + 3) % 20;
-
-                // Step 1: Get recipes from Spoonacular
+                // Step 1: Get recipes from Spoonacular with the provided offset
                 var ingredientNames = cartItems.Select(item => item.ProductName).ToList();
                 logger.LogInformation("Cart items: {Ingredients}, Offset: {Offset}", 
-                    string.Join(", ", ingredientNames), offsetCounter);
+                    string.Join(", ", ingredientNames), offset);
                 
                 var spoonacularRecipes = await spoonacularService.SearchRecipesByIngredientsAsync(
                     ingredientNames, 
                     30,
-                    offset: offsetCounter);
+                    offset: offset);
 
                 if (spoonacularRecipes?.Any() != true)
                 {
                     logger.LogWarning("No recipes found from Spoonacular");
-                    offsetCounter = 0;
+                    offset = 0;
                     return await fallbackService.GetRecipeSuggestionsAsync(cartItems, availableProducts, filter);
                 }
 

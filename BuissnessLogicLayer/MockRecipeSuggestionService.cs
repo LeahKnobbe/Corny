@@ -12,7 +12,8 @@ namespace BuissnessLogicLayer
         public Task<RecipeSuggestionResult> GetRecipeSuggestionsAsync(
             IReadOnlyList<CartItemInfo> cartItems,
             IReadOnlyList<ProductModel> availableProducts,
-            string? filter = null)
+            string? filter = null,
+            int offset = 0)
         {
             // Mock recipes based on the design
             var recipes = new List<RecipeCardViewModel>
